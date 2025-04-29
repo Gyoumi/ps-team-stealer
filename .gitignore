@@ -1,1 +1,10 @@
 /target
+/models
+/frames
+out.mp4
+src/frame_50*
+frame_50_edited.bmp
+src/ocr.rs
+src/video.rs
+metadata.json
+src/models
