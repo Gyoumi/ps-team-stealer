@@ -5,7 +5,7 @@ An asynchronous, high-performance Rust application that streams and processes vi
 ## ✨ Features
 
 - 🔁 **Streaming without file I/O**: Streams video as raw RGB frames via `yt-dlp` → `ffmpeg` → Rust using in-memory pipes.
-- ⚙️ **Concurrent processing pipeline**: Uses an MPMC (multi-producer, multi-consumer) channel model to process frames with a pool of async worker tasks.
+- ⚙️ **Concurrent processing pipeline**: Uses an MPMC channel model to process frames with a pool of async worker tasks (WIP currently N SCPC).
 - 📊 **Real-time progress tracking**: Displays terminal progress bar based on estimated video size using `indicatif`.
 
 ## 🧰 Tech Stack
