@@ -9,6 +9,7 @@ use std::process::Stdio;
 use std::sync::Arc;
 use image::RgbImage;
 use indicatif::{ProgressBar, ProgressStyle};
+use std::env;
 
 #[derive(Clone)]
 struct Resolution {
@@ -147,7 +148,10 @@ async fn process_video(mut video_stream: tokio::process::ChildStdout, frame_size
     let mut worker_senders = Vec::new();
     let mut workers = Vec::new();
 
-    let worker_count = 4;
+    let worker_count = match env::var("WORKER_COUNT") {
+        Ok(val) => val.parse::<usize>().unwrap_or(1),
+        Err(_) => 1,
+    };
 
     // spsc for each worker
     for id in 0..worker_count {
@@ -164,7 +168,7 @@ async fn process_video(mut video_stream: tokio::process::ChildStdout, frame_size
         match ffmpeg_stdout.read_exact(&mut frame_bytes).await {
             Ok(_) => {
                 let frame_data = Arc::new(frame_bytes.clone());
-                let worker_id = frame_number % worker_senders.len();
+                let worker_id = frame_number % worker_count;
                 
                 if let Err(e) = worker_senders[worker_id].send((frame_data, frame_number)).await {
                     eprintln!("Failed to send frame to worker {worker_id}: {e}");
@@ -204,7 +208,8 @@ async fn worker_task(
 
 
 fn process_frames(frame: RgbImage, frame_number: i32) -> Result<(), Box<dyn Error>> {
-    let frame_path = format!("./src/frames/frame_{}.png", frame_number); // Save the first frame
+
+    let frame_path = format!("./frames/frame_{}.png", frame_number); // Save the first frame
     frame.save(frame_path).expect("unable to save image");
 
     // read_frame(frame)?;

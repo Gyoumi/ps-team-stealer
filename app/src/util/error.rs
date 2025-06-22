@@ -14,3 +14,12 @@ pub enum YtDlpError {
     #[error("No suitable video-only format found")]
     NoVideoOnlyFormat,
 }
+
+#[derive(Error, Debug)]
+pub enum ModelError {
+    #[error("Unable to load Segmentation Model")]
+    SegmentModelLoadError,
+
+    #[error("Unable to load segments {0}")]
+    SegmentInferenceError(#[from] kalosm::vision::SegmentAnythingInferenceError),
+}

@@ -8,3 +8,12 @@ src/ocr.rs
 src/video.rs
 metadata.json
 src/models
+ocr/*
+app/yt-dlp-env
+app/segment
+app/src/frame_50_bw.png
+app/src/frame_50_left.png
+app/src/frame_50.bmp
+app/src/.env
+app/src/frames
+app/frame_50.png
