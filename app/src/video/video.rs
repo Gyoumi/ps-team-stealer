@@ -1,8 +1,7 @@
 use tokio::process::Command;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
-use tokio::sync::mpsc::{self, Receiver};
-use tokio::sync::Mutex;
 use tokio::task::{self, JoinHandle};
+use flume::{Sender, Receiver};
 use core::str;
 use std::error::Error;
 use std::process::Stdio;
@@ -145,33 +144,30 @@ async fn process_video(mut video_stream: tokio::process::ChildStdout, frame_size
         Ok::<(), std::io::Error>(())
     });
 
-    let mut worker_senders = Vec::new();
-    let mut workers = Vec::new();
-
     let worker_count = match env::var("WORKER_COUNT") {
         Ok(val) => val.parse::<usize>().unwrap_or(1),
         Err(_) => 1,
     };
+    let (tx, rx): (Sender<(Arc<Vec<u8>>, usize)>, Receiver<(Arc<Vec<u8>>, usize)>) = flume::unbounded(); 
 
     // spsc for each worker
     for id in 0..worker_count {
-        let (tx, rx) = mpsc::channel::<(Arc<Vec<u8>>, usize)>(32); 
-        worker_senders.push(tx);
+        let mut rx = rx.clone();        
         let frame_size = frame_size.clone();
-        workers.push(tokio::spawn(worker_task(id, rx, frame_size)));
+
+        tokio::spawn(worker_task(id, rx, frame_size));
     }
 
     let mut frame_number = 0;
-    let mut frame_bytes = vec![0u8; frame_size.capacity];
 
     loop {
+        let mut frame_bytes = vec![0u8; frame_size.capacity];
         match ffmpeg_stdout.read_exact(&mut frame_bytes).await {
             Ok(_) => {
-                let frame_data = Arc::new(frame_bytes.clone());
-                let worker_id = frame_number % worker_count;
-                
-                if let Err(e) = worker_senders[worker_id].send((frame_data, frame_number)).await {
-                    eprintln!("Failed to send frame to worker {worker_id}: {e}");
+                let frame_data = Arc::new(frame_bytes);
+                if tx.send_async((frame_data, frame_number)).await.is_err() {
+                    eprintln!("All workers done. Exiting.");
+                    break;
                 }
                 frame_number += 1;
             }
@@ -183,21 +179,17 @@ async fn process_video(mut video_stream: tokio::process::ChildStdout, frame_size
         }
     }
 
-    drop(worker_senders);
-
-    for worker in workers {
-        let _ = worker.await;
-    }
+    drop(tx);
 
     Ok(Vec::new())
 }
 
 async fn worker_task(
     id: usize,
-    mut rx: mpsc::Receiver<(Arc<Vec<u8>>, usize)>,
+    mut rx: Receiver<(Arc<Vec<u8>>, usize)>,
     frame_size: Resolution
 ) {
-    while let Some((frame_data, frame_number)) = rx.recv().await {
+    while let Ok((frame_data, frame_number)) = rx.recv_async().await {
         if let Some(img) = RgbImage::from_raw(frame_size.width, frame_size.height, (*frame_data).clone()) {
             if let Err(e) = process_frames(img, frame_number as i32) {
                 eprintln!("worker {id} frame {frame_number} failed: {e}");
