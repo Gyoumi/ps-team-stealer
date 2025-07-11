@@ -17,9 +17,21 @@ pub enum YtDlpError {
 
 #[derive(Error, Debug)]
 pub enum ModelError {
-    #[error("Unable to load Segmentation Model")]
-    SegmentModelLoadError,
+    #[error("Image error: {0}")]
+    ImageError(String),
 
-    #[error("Unable to load segments {0}")]
-    SegmentInferenceError(#[from] kalosm::vision::SegmentAnythingInferenceError),
+    #[error("ONNX error: {0}")]
+    OnnxError(String),
+}
+
+impl From<image::ImageError> for ModelError {
+    fn from(err: image::ImageError) -> Self {
+        ModelError::ImageError(err.to_string())
+    }
+}
+
+impl From<ort::Error> for ModelError {
+    fn from(err: ort::Error) -> Self {
+        ModelError::OnnxError(err.to_string())
+    }
 }

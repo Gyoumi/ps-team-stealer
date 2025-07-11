@@ -13,7 +13,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>>{
     dotenv().ok();
     let url = "https://www.youtube.com/watch?v=5xjQgr8xN9s";
 
-    image_processor::process_image(0).await;
+    image_processor::process_image(50).await;
 
     Ok(())
 
