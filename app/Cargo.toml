@@ -4,7 +4,8 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-ort = { version = "2.0.0-rc.10" }
+ort = { version = "=2.0.0-rc.9", features = ["ndarray", "tensorrt"] }
+ort-sys = "=2.0.0-rc.9"
 ndarray = "0.16.1"
 dotenv = "0.15.0"
 flume = "0.11.1"

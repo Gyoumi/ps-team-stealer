@@ -135,25 +135,15 @@ pub fn segment_image(id: usize) -> Result<RgbImage, ModelError> { //Result<HashM
 
 
     let (input_tensor, og_width, og_height) = rgb_image_to_tensor(image, 640, 640)?;
-    let mut session = Session::builder()?
+    let session = Session::builder()?
     .with_optimization_level(GraphOptimizationLevel::Level3)?
     .commit_from_file("src/image/model/yolo_custom.onnx")?;
 
-    let input_value = Value::from_array(input_tensor)?;
-    let input = ort::inputs![input_value];
+    let input = ort::inputs![input_tensor.view()]?;
     let outputs: SessionOutputs = session.run(input)?;
 
     // Print raw model output
-    let (shape, data) = outputs["output0"]
-    .try_extract_tensor::<f32>()
-    .unwrap();
-
-    // Convert ort::tensor::Shape to a slice of dimensions and cast i64 to usize
-    let dims: Vec<usize> = shape.as_ref().iter().map(|&d| d as usize).collect();
-
-    // Convert &[f32] to ndarray
-    let output_array = ndarray::ArrayD::from_shape_vec(dims, data.to_vec()).unwrap();
-
+    let output_array = outputs["output0"].try_extract_tensor::<f32>().unwrap().t().into_owned();
     println!("Shape: {:?}", output_array.view().shape());
 
 
