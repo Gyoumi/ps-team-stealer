@@ -13,11 +13,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>>{
     dotenv().ok();
     let url = "https://www.youtube.com/watch?v=5xjQgr8xN9s";
 
-    image_processor::process_image(50).await;
+    //image_processor::process_image(50).await;
 
+    //Ok(())
+
+    start(url).await?;
     Ok(())
-
-    // start(url).await
 
     // let img_file = "./src/frames/frame_50.bmp";
     // let img = image::open(img_file).map(|image| image.into_luma8())?;

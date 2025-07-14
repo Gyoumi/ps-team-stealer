@@ -1,8 +1,9 @@
-use image::DynamicImage;
+use image::{RgbImage};
 use super::image_segmenter;
 
-pub async fn process_image(id: usize) {
-    let _segments = image_segmenter::segment_image(id);
+pub fn process_image(id: usize, image: RgbImage) {
+    println!("Processing image {}", id);
+    let _segments = image_segmenter::segment_image(id, image);
     // match segments {
     //     Ok(images) => for (label, img) in &images {
     //         let seg_path = format!("./segment/seg_{}.png", label); 
