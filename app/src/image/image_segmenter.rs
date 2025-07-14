@@ -7,6 +7,11 @@ use imageproc::drawing::draw_text_mut;
 
 use ndarray::ArrayViewD;
 
+const MODEL_PATH: &str = format!("src/image/model/{}.onnx", match env::var("YOLO_MODEL") {
+    Ok(val) => val,
+    Err(_) => "yolo_custm",
+});
+
 #[derive(Clone, Debug, Copy)]
 struct BoundingBox {
     x1: f32,
@@ -139,7 +144,7 @@ pub fn segment_image(id: usize, image: RgbImage) -> Result<RgbImage, ModelError>
     let (input_tensor, og_width, og_height) = rgb_image_to_tensor(image, 640, 640)?;
     let session = Session::builder()?
     .with_optimization_level(GraphOptimizationLevel::Level3)?
-    .commit_from_file("src/image/model/75epoch-640imgs-tourhover-last.onnx")?;
+    .commit_from_file(MODEL_PATH)?;
 
     let input = ort::inputs![input_tensor.view()]?;
     let outputs: SessionOutputs = session.run(input)?;
