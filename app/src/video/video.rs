@@ -9,6 +9,7 @@ use std::sync::Arc;
 use image::RgbImage;
 use indicatif::{ProgressBar, ProgressStyle};
 use std::env;
+use crate::image::image_processor;
 
 #[derive(Clone)]
 struct Resolution {
@@ -191,7 +192,7 @@ async fn worker_task(
 ) {
     while let Ok((frame_data, frame_number)) = rx.recv_async().await {
         if let Some(img) = RgbImage::from_raw(frame_size.width, frame_size.height, (*frame_data).clone()) {
-            if let Err(e) = process_frames(img, frame_number as i32) {
+            if let Err(e) = process_frames(img, frame_number).await {
                 eprintln!("worker {id} frame {frame_number} failed: {e}");
             }
         }
@@ -199,10 +200,13 @@ async fn worker_task(
 }
 
 
-fn process_frames(frame: RgbImage, frame_number: i32) -> Result<(), Box<dyn Error>> {
+async fn process_frames(frame: RgbImage, frame_number: usize) -> Result<(), Box<dyn Error>> {
 
-    let frame_path = format!("./frames/frame_{}.png", frame_number); // Save the first frame
-    frame.save(frame_path).expect("unable to save image");
+    // let frame_path = format!("./frames/frame_{}.png", frame_number); // Save the first frame
+    // frame.save(frame_path).expect("unable to save image");
+
+    println!("Processing frame {}", frame_number);
+    image_processor::process_image(frame_number, frame);
 
     // read_frame(frame)?;
 

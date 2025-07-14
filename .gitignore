@@ -17,3 +17,5 @@ app/src/frame_50.bmp
 app/src/.env
 app/src/frames
 app/frame_50.png
+app/src/image/model/*
+app/target
