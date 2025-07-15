@@ -22,6 +22,9 @@ pub enum ModelError {
 
     #[error("ONNX error: {0}")]
     OnnxError(String),
+
+    #[error("Ollama error: {0}")]
+    OllamaError(String),    
 }
 
 impl From<image::ImageError> for ModelError {
@@ -33,5 +36,11 @@ impl From<image::ImageError> for ModelError {
 impl From<ort::Error> for ModelError {
     fn from(err: ort::Error) -> Self {
         ModelError::OnnxError(err.to_string())
+    }
+}
+
+impl From<ollama_rs::error::OllamaError> for ModelError {
+    fn from(err: ollama_rs::error::OllamaError) -> Self {
+        ModelError::OllamaError(err.to_string())
     }
 }

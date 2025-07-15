@@ -1,16 +1,31 @@
 use ort::{environment::Environment, session::{Session, builder::GraphOptimizationLevel, output::SessionOutputs}, value::Value};
-use image::{imageops::{resize, FilterType}, ImageBuffer, Rgb, RgbImage};
-use ndarray::{Array, IxDyn, CowArray, Ix4, s, Axis};
+use image::{imageops::{resize, FilterType}, ImageBuffer, Rgb, RgbImage, GenericImageView};
+use ndarray::{Array, IxDyn, CowArray, Ix4, s, Axis, ArrayViewD};
 use crate::util::error::ModelError;
-use std::sync::Arc;
+use std::{sync::Arc, env, collections::HashMap};
 use imageproc::drawing::draw_text_mut;
+use once_cell::sync::Lazy;
 
-use ndarray::ArrayViewD;
-
-const MODEL_PATH: &str = format!("src/image/model/{}.onnx", match env::var("YOLO_MODEL") {
-    Ok(val) => val,
-    Err(_) => "yolo_custm",
+pub static MODEL_PATH: Lazy<String> = Lazy::new(|| {
+    let model = env::var("YOLO_MODEL").unwrap_or_else(|_| String::from("yolo_custom"));
+    format!("src/image/model/{}.onnx", model)
 });
+
+pub static LABELS: Lazy<Vec<String>> = Lazy::new(|| {
+    let raw = env::var("LABELS").unwrap_or_default();
+    println!("LABELS raw from env: {:?}", raw);
+    raw.split(',')
+        .map(|s| s.trim().to_string())
+        .collect()
+});
+
+fn get_model_path() -> &'static str {
+    MODEL_PATH.as_str()
+}
+
+fn get_labels() -> Vec<String> {
+    LABELS.to_vec()
+}
 
 #[derive(Clone, Debug, Copy)]
 struct BoundingBox {
@@ -74,6 +89,33 @@ fn draw_boxes(mut img: RgbImage, boxes: &[BoundingBox], height: u32, width: u32)
     img
 }
 
+pub fn crop_segments_by_label(
+    image: &RgbImage,
+    boxes: &[BoundingBox],
+    labels: Vec<String>,
+) -> HashMap<String, Vec<RgbImage>> {
+    let mut map: HashMap<String, Vec<RgbImage>> = HashMap::new();
+
+    for bbox in boxes {
+        let x1 = bbox.x1.max(0.0).floor() as u32;
+        let y1 = bbox.y1.max(0.0).floor() as u32;
+        let x2 = bbox.x2.min(image.width() as f32).ceil() as u32;
+        let y2 = bbox.y2.min(image.height() as f32).ceil() as u32;
+
+        if x2 <= x1 || y2 <= y1 {
+            continue; 
+        }
+
+        let sub_image = image.view(x1, y1, x2 - x1, y2 - y1).to_image();
+        let label = labels.get(bbox.class_id).map(|s| s.as_str()).unwrap_or("unknown").to_string();
+
+
+        map.entry(label).or_default().push(sub_image);
+    }
+
+    map
+}
+
 fn postprocess_output(output: &ArrayViewD<f32>, img_width: u32, img_height: u32) -> Vec<BoundingBox> { 
     let mut boxes = Vec::new();
         let output = output.slice(s![.., .., 0]);
@@ -129,7 +171,7 @@ fn postprocess_output(output: &ArrayViewD<f32>, img_width: u32, img_height: u32)
         
                 let iou = inter / union;
         
-                iou < 0.5 
+                iou < 0.7
             });
         }
         
@@ -137,14 +179,14 @@ fn postprocess_output(output: &ArrayViewD<f32>, img_width: u32, img_height: u32)
         
 }
 
-
-pub fn segment_image(id: usize, image: RgbImage) -> Result<RgbImage, ModelError> { //Result<HashMap<String, RgbImage>, ModelError> {
-    println!("Segmenting image {}", id);
+pub fn segment_image(id: usize, image: RgbImage) -> Result<HashMap<String, Vec<RgbImage>>, ModelError> {
+    println!("Segmenting image {} with model {}", id, MODEL_PATH.as_str());
     let og_image = image.clone();
+    let og_image_2 = image.clone();
     let (input_tensor, og_width, og_height) = rgb_image_to_tensor(image, 640, 640)?;
     let session = Session::builder()?
     .with_optimization_level(GraphOptimizationLevel::Level3)?
-    .commit_from_file(MODEL_PATH)?;
+    .commit_from_file(get_model_path())?;
 
     let input = ort::inputs![input_tensor.view()]?;
     let outputs: SessionOutputs = session.run(input)?;
@@ -159,5 +201,13 @@ pub fn segment_image(id: usize, image: RgbImage) -> Result<RgbImage, ModelError>
     let output_img = draw_boxes(og_image, &boxes, og_height, og_width);
     output_img.save(format!("segment/segmented_{}.png", id))?;
 
-    Ok(output_img)
+    let segments = crop_segments_by_label(&og_image_2, &boxes, get_labels());
+    for (label, segment) in segments.clone() {
+        println!("Segmented {} segments for label {}", segment.len(), label);
+        for (_, s) in segment.iter().enumerate() {
+            s.save(format!("segment/segmented_{}_{}.png", id, label))?;
+        }
+    }
+
+    Ok(segments)
 }
