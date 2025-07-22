@@ -4,9 +4,10 @@ use tokio::sync::RwLock;
 use std::collections::HashMap;
 use image::RgbImage;
 use std::io::Cursor;
-use crate::text::team::Team;
+use crate::text::{team::Team, battle::Battle};
 
 pub static TEAMS: Lazy<Arc<RwLock<Vec<Team>>>> = Lazy::new(|| Arc::new(RwLock::new(Vec::new())));
+pub static BATTLES: Lazy<Arc<RwLock<Vec<Battle>>>> = Lazy::new(|| Arc::new(RwLock::new(Vec::new())));
 
 static OCR_RESULTS: Lazy<Mutex<HashMap<String, Vec<String>>>> = Lazy::new(|| Mutex::new(HashMap::new()));
 

@@ -61,7 +61,8 @@ pub async fn process_image(id: usize, image: RgbImage) {
                 return;
             }
 
-            if images.contains_key("battle") && images.contains_key("chat") && !images.contains_key("turn_log") {
+            if images.contains_key("battle") && images.contains_key("chat") && !images.contains_key("turn_log") && (BATTLES.read().await.is_empty() || BATTLES.read().await.last().unwrap().get_highest_turn() > 0) {
+                BATTLES.write().await.push(Battle::new());
                 IN_BATTLE.set_state(FALSE); // new battle started
             }
 
@@ -86,6 +87,14 @@ pub async fn process_image(id: usize, image: RgbImage) {
                             }
                             acc
                         }).into_iter().filter(|s| !s.is_empty()).collect::<Vec<String>>();
+
+                        if let Some(opponent) = players.get(0) {
+                            BATTLES.write().await.last_mut().unwrap().set_opponent(opponent);
+                        } else {
+                            eprintln!("No opponent found");
+                            IN_BATTLE.set_state(FALSE);
+                            return;
+                        }
 
                         if let Some(player) = players.get(1) { // player name is in bottom row
 
