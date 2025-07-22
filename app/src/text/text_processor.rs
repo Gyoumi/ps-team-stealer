@@ -1,8 +1,12 @@
 use once_cell::sync::Lazy;
-use std::sync::Mutex;
+use std::sync::{Mutex, Arc};
+use tokio::sync::RwLock;
 use std::collections::HashMap;
 use image::RgbImage;
 use std::io::Cursor;
+use crate::text::team::Team;
+
+pub static TEAMS: Lazy<Arc<RwLock<Vec<Team>>>> = Lazy::new(|| Arc::new(RwLock::new(Vec::new())));
 
 static OCR_RESULTS: Lazy<Mutex<HashMap<String, Vec<String>>>> = Lazy::new(|| Mutex::new(HashMap::new()));
 

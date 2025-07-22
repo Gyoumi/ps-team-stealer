@@ -13,7 +13,6 @@ pub static MODEL_PATH: Lazy<String> = Lazy::new(|| {
 
 pub static LABELS: Lazy<Vec<String>> = Lazy::new(|| {
     let raw = env::var("LABELS").unwrap_or_default();
-    println!("LABELS raw from env: {:?}", raw);
     raw.split(',')
         .map(|s| s.trim().to_string())
         .collect()
@@ -165,7 +164,7 @@ fn postprocess_output(output: &ArrayViewD<f32>, img_width: u32, img_height: u32)
                 let inter = best.intersection(b);
                 let union = best.union(b);
         
-                if inter <= 0.0 || union <= 0.0 {
+                if inter <= 0. || union <= 0. {
                     return true; 
                 }
         
@@ -180,7 +179,7 @@ fn postprocess_output(output: &ArrayViewD<f32>, img_width: u32, img_height: u32)
 }
 
 pub fn segment_image(id: usize, image: RgbImage) -> Result<HashMap<String, Vec<RgbImage>>, ModelError> {
-    println!("Segmenting image {} with model {}", id, MODEL_PATH.as_str());
+    println!("Segmenting image {}", id);
     let og_image = image.clone();
     let og_image_2 = image.clone();
     let (input_tensor, og_width, og_height) = rgb_image_to_tensor(image, 640, 640)?;
@@ -192,7 +191,6 @@ pub fn segment_image(id: usize, image: RgbImage) -> Result<HashMap<String, Vec<R
     let outputs: SessionOutputs = session.run(input)?;
 
     let output_array = outputs["output0"].try_extract_tensor::<f32>().unwrap().t().into_owned();
-    println!("Shape: {:?}", output_array.view().shape());
 
 
     let boxes = postprocess_output(&output_array.view(), og_width, og_height);
