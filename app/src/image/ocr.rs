@@ -21,7 +21,7 @@ pub async fn ocr_segment(image: &RgbImage) -> Result<String, ModelError> {
     //paddle_crate_ocr(image)
 }
 
-fn paddle_crate_ocr(image: &RgbImage) -> Result<String, ModelError> {
+pub fn paddle_crate_ocr(image: &RgbImage) -> Result<String, ModelError> {
     let mut ocr = OcrLite::new();
 
     ocr.init_models(
@@ -117,7 +117,9 @@ pub async fn ollama_ocr(image: &RgbImage) -> Result<String, ModelError> {
        moves: string[],    
     } 
     The 'spe_range' field should be true if 'Spe' is listed as a range between two numbers such as 'Spe {num1} to {num2}'. 
-    It should be false if 'Spe' only has a single number. Please do not hallucinate.";
+    It should be false if 'Spe' only has a single number. 
+    Please ensure that all stats are prior to any modifiers. 
+    Please only output the JSON. Please do not hallucinate.";
     //println!("OCRing image");
     let base64_image = image_to_base64(image)?;
     //println!("Got base64 image");

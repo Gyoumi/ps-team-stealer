@@ -16,7 +16,7 @@ use text::text_processor;
 async fn main() -> Result<(), Box<dyn std::error::Error>>{
     dotenv().ok();
     let url = "https://www.youtube.com/watch?v=5xjQgr8xN9s";
-    let image = ::image::open("./test1.png").unwrap().into_rgb8();
+    let image = ::image::open("./frame_0.png").unwrap().into_rgb8();
     image_processor::process_image(50, image).await;
 
     Ok(())

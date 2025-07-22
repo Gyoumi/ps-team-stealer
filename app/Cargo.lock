@@ -150,7 +150,7 @@ dependencies = [
  "log",
  "memmap2",
  "nohash",
- "ordered-float",
+ "ordered-float 4.6.0",
  "rand 0.8.5",
  "rayon",
  "roaring",
@@ -3170,6 +3170,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "ordered-float"
+version = "5.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e2c1f9f56e534ac6a9b8a4600bdf0f530fb393b5f393e7b4d03489c3cf0c3f01"
+dependencies = [
+ "num-traits",
+]
+
+[[package]]
 name = "ort"
 version = "2.0.0-rc.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4026,6 +4035,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "rust-fuzzy-search"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a157657054ffe556d8858504af8a672a054a6e0bd9e8ee531059100c0fa11bb2"
+
+[[package]]
 name = "rustc-demangle"
 version = "0.1.25"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4757,10 +4772,12 @@ dependencies = [
  "ocrs",
  "ollama-rs",
  "once_cell",
+ "ordered-float 5.0.0",
  "ort",
  "ort-sys",
  "paddle-ocr-rs",
  "rten",
+ "rust-fuzzy-search",
  "serde_json",
  "thiserror 2.0.12",
  "tokio",
