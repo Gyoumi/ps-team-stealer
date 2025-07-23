@@ -16,16 +16,12 @@ pub struct Battle {
 }
 
 impl Battle {
-    pub fn new() -> Self {
+    pub fn new(opponent: String) -> Self {
         Self {
-            opponent: "".to_string(),
-            highest_turn: -1,
+            opponent,
+            highest_turn: 0,
             weather_turns: HashMap::new(),
         }
-    }
-
-    pub fn set_opponent(&mut self, opponent: String) {
-        self.opponent = opponent;
     }
 
     pub fn update_highest_turn(&mut self, turn: u32) {

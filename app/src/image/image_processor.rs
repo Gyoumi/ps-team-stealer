@@ -61,8 +61,19 @@ pub async fn process_image(id: usize, image: RgbImage) {
                 return;
             }
 
+            if id % 1000 == 0 {
+                // read chat and update battle every 1000 frames
+                // if let Some((chat_label, chat_img)) = images.get_key_value("chat") {
+                //     let result = ocr::paddle_crate_ocr(chat_img.get(0).unwrap());
+                //     match result {
+                //         Ok(text) => {
+                //             let lines = text.lines().collect::<Vec<&str>>();
+                //         }
+                //     }
+                // }
+            }
+
             if images.contains_key("battle") && images.contains_key("chat") && !images.contains_key("turn_log") && (BATTLES.read().await.is_empty() || BATTLES.read().await.last().unwrap().get_highest_turn() > 0) {
-                BATTLES.write().await.push(Battle::new());
                 IN_BATTLE.set_state(FALSE); // new battle started
             }
 
@@ -89,7 +100,8 @@ pub async fn process_image(id: usize, image: RgbImage) {
                         }).into_iter().filter(|s| !s.is_empty()).collect::<Vec<String>>();
 
                         if let Some(opponent) = players.get(0) {
-                            BATTLES.write().await.last_mut().unwrap().set_opponent(opponent);
+                            let mut battle = Battle::new(opponent);
+                            BATTLES.write().await.push(battle);
                         } else {
                             eprintln!("No opponent found");
                             IN_BATTLE.set_state(FALSE);
