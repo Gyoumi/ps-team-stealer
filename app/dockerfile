@@ -1,0 +1,37 @@
+FROM rust:1-bookworm AS planner
+
+WORKDIR /app
+RUN cargo install cargo-chef
+COPY . .
+RUN cargo chef prepare --recipe-path recipe.json
+
+FROM rust:1-bookworm AS cacher
+WORKDIR /app
+RUN cargo install cargo-chef
+COPY --from=planner /app/recipe.json recipe.json
+RUN cargo chef cook --release --recipe-path recipe.json
+
+FROM rust:1-bookworm AS builder
+WORKDIR /app
+COPY . .
+COPY --from=cacher /app/target target
+
+RUN cargo build --release --bin team_stealer
+
+
+FROM debian:bookworm-slim AS runner
+ARG APP=/usr/src/app
+
+RUN apt-get update && \
+    apt-get install -y ffmpeg yt-dlp ca-certificates wget && \
+    wget https://github.com/microsoft/onnxruntime/releases/download/v1.20.0/onnxruntime-linux-x64-1.20.0.tgz && \
+    tar -xzf onnxruntime-linux-x64-1.20.0.tgz && \
+    cp onnxruntime-linux-x64-1.20.0/lib/libonnxruntime.so* /usr/lib/ && \
+    rm -rf onnxruntime-linux-x64-1.20.0* && \
+    rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+COPY --from=builder /app/target/release/team_stealer /usr/local/bin/team_stealer
+
+ENTRYPOINT ["/usr/local/bin/team_stealer"]

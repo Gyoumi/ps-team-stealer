@@ -60,17 +60,17 @@ impl From<ollama_rs::error::OllamaError> for ModelError {
     }
 }
 
-impl From<kalosm::vision::LoadOcrError> for ModelError {
-    fn from(err: kalosm::vision::LoadOcrError) -> Self {
-        ModelError::KalosmError(err.to_string())
-    }
-}
+// impl From<kalosm::vision::LoadOcrError> for ModelError {
+//     fn from(err: kalosm::vision::LoadOcrError) -> Self {
+//         ModelError::KalosmError(err.to_string())
+//     }
+// }
 
-impl From<kalosm::vision::OcrInferenceError> for ModelError {
-    fn from(err: kalosm::vision::OcrInferenceError) -> Self {
-        ModelError::KalosmError(err.to_string())
-    }
-}
+// impl From<kalosm::vision::OcrInferenceError> for ModelError {
+//     fn from(err: kalosm::vision::OcrInferenceError) -> Self {
+//         ModelError::KalosmError(err.to_string())
+//     }
+// }
 
 impl From<rten::ModelLoadError> for ModelError {
     fn from(err: rten::ModelLoadError) -> Self {

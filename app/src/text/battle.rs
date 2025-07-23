@@ -1,3 +1,6 @@
+use std::collections::HashMap;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Weather {
     Sand,
     Sun,
@@ -16,9 +19,9 @@ pub struct Battle {
 }
 
 impl Battle {
-    pub fn new(opponent: String) -> Self {
+    pub fn new(opponent: &str) -> Self {
         Self {
-            opponent,
+            opponent: opponent.to_string(),
             highest_turn: 0,
             weather_turns: HashMap::new(),
         }

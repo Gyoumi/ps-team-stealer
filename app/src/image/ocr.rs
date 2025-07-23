@@ -1,6 +1,6 @@
 use std::io::Cursor;
 use ollama_rs::{Ollama, generation::{completion::request::GenerationRequest, images::Image}};
-use kalosm::vision::*;
+// use kalosm::vision::*;
 use ocrs::{ImageSource, OcrEngine, OcrEngineParams};
 use rten::Model;
 use std::path::PathBuf;
@@ -42,6 +42,7 @@ pub fn paddle_crate_ocr(image: &RgbImage) -> Result<String, ModelError> {
         false,
         false,
     )?;
+    
 
     Ok(result.text_blocks.iter().map(|item| item.text.clone()).join("\n"))
 }
