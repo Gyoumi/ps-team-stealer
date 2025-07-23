@@ -15,15 +15,17 @@ pub type WeatherRange = (u32, u32);
 pub struct Battle {
     opponent: String,
     highest_turn: u32,
-    weather_turns: HashMap<Weather, Vec<WeatherRange>>
+    weather_turns: HashMap<Weather, Vec<WeatherRange>>,
+    team_id: usize,
 }
 
 impl Battle {
-    pub fn new(opponent: &str) -> Self {
+    pub fn new(opponent: &str, team_id: usize) -> Self {
         Self {
             opponent: opponent.to_string(),
             highest_turn: 0,
             weather_turns: HashMap::new(),
+            team_id,
         }
     }
 

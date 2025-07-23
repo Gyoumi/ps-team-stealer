@@ -106,7 +106,7 @@ pub async fn process_image(id: usize, image: RgbImage) {
                             Ok(text) => {
                                 let lines = text.lines().collect::<Vec<&str>>();
                                 
-                                let players_battle = lines.iter().map(|&line| {
+                                let mut players= lines.iter().map(|&line| {
                                     let first_score = fuzzy_compare(line, players_chat[0]);
                                     let second_score = fuzzy_compare(line, players_chat[1]);
 
@@ -115,11 +115,36 @@ pub async fn process_image(id: usize, image: RgbImage) {
                                     } else {
                                         (players_chat[1], second_score)
                                     }
-                                }).filter(|(_, score)| *score > 0.0).collect::<Vec<(&str, f32)>>();
+                                }).filter(|(_, score)| *score > 0.0).take(2).map(|(name, _)| name);
 
-                                lines
+                                if let (Some(opponent), Some(player)) = (players.next(), players.next()) {
+                                    let idx = chat_lines.iter().find_position(|&line| line.starts_with(player)).unwrap().0;
 
-                                return;
+                                    let mons: Vec<Pokemon> = chat_lines[idx+1].split('/')
+                                        .take(6)
+                                        .map(|name| Pokemon::new(name.trim()))
+                                        .collect::<Vec<Pokemon>>();
+
+                                    let player_team = Team::new(mons);
+
+                                    for (i, team) in TEAMS.read().await.iter().enumerate() {
+                                        if team == &player_team {
+                                            let battle = Battle::new(opponent, i);
+                                            BATTLES.write().await.push(battle);
+                                            IN_BATTLE.set_state(TRUE);
+                                            return;
+                                        }
+                                    }
+
+                                    TEAMS.write().await.push(player_team);
+                                    let battle = Battle::new(opponent, TEAMS.read().await.len() - 1);
+                                    BATTLES.write().await.push(battle);
+                                    IN_BATTLE.set_state(TRUE);
+
+                                } else {
+                                    IN_BATTLE.set_state(FALSE);
+                                    return;
+                                }
                             }
                             Err(e) => {
                                 eprintln!("Error OCRing image: {}", e);
@@ -168,107 +193,107 @@ pub async fn process_image(id: usize, image: RgbImage) {
                     }
                 }
             }
-            if IN_BATTLE.get_state() == FALSE && images.contains_key("battle") {
-                IN_BATTLE.set_state(LOADING);
-                let (_label, img) = images.get_key_value("battle").unwrap();
-                let result = ocr::paddle_crate_ocr(img.get(0).unwrap());
+    //         if IN_BATTLE.get_state() == FALSE && images.contains_key("battle") {
+    //             IN_BATTLE.set_state(LOADING);
+    //             let (_label, img) = images.get_key_value("battle").unwrap();
+    //             let result = ocr::paddle_crate_ocr(img.get(0).unwrap());
 
-                match result {
-                    Ok(text) => {
-                        println!("ocr result: {:?}", text);
-                        let players = text.lines().fold(Vec::new(), |mut acc, line| {
-                            if line.trim().is_empty() {
-                                if acc.last().map_or(false, |s: &String| !s.trim().is_empty()) {
-                                    acc.push(String::new());
-                                }
-                            } else {
-                                if acc.is_empty() {
-                                    acc.push(line.trim().to_string());
-                                } else {
-                                    acc.last_mut().unwrap().push_str(&line.trim());
-                                }
-                            }
-                            acc
-                        }).into_iter().filter(|s| !s.is_empty()).collect::<Vec<String>>();
+    //             match result {
+    //                 Ok(text) => {
+    //                     println!("ocr result: {:?}", text);
+    //                     let players = text.lines().fold(Vec::new(), |mut acc, line| {
+    //                         if line.trim().is_empty() {
+    //                             if acc.last().map_or(false, |s: &String| !s.trim().is_empty()) {
+    //                                 acc.push(String::new());
+    //                             }
+    //                         } else {
+    //                             if acc.is_empty() {
+    //                                 acc.push(line.trim().to_string());
+    //                             } else {
+    //                                 acc.last_mut().unwrap().push_str(&line.trim());
+    //                             }
+    //                         }
+    //                         acc
+    //                     }).into_iter().filter(|s| !s.is_empty()).collect::<Vec<String>>();
 
-                        println!("ocr size: {:?}", players.len());
+    //                     println!("ocr size: {:?}", players.len());
 
-                        if let Some(opponent) = players.first(){
-                            let battle = Battle::new(opponent);
-                            BATTLES.write().await.push(battle);
-                        } else {
-                            eprintln!("No opponent found");
-                            IN_BATTLE.set_state(FALSE);
-                            return;
-                        }
+    //                     if let Some(opponent) = players.first(){
+    //                         let battle = Battle::new(opponent);
+    //                         BATTLES.write().await.push(battle);
+    //                     } else {
+    //                         eprintln!("No opponent found");
+    //                         IN_BATTLE.set_state(FALSE);
+    //                         return;
+    //                     }
 
-                        if let Some(player) = players.get(1) { // player name is in bottom row
+    //                     if let Some(player) = players.get(1) { // player name is in bottom row
 
                         
-                            println!("Players name is: {}", player);
+    //                         println!("Players name is: {}", player);
 
-                            if let Some((_chat_label, chat_img)) = images.get_key_value("chat") {
-                                let result = ocr::paddle_crate_ocr(chat_img.get(0).unwrap());
-                                //println!("ocr result: {:?}", result);
+    //                         if let Some((_chat_label, chat_img)) = images.get_key_value("chat") {
+    //                             let result = ocr::paddle_crate_ocr(chat_img.get(0).unwrap());
+    //                             //println!("ocr result: {:?}", result);
 
-                                match result {
-                                    Ok(text) => {
-                                        let lines = text.lines().collect::<Vec<&str>>();
-                                        let pattern = format!("{}'s team", player);
+    //                             match result {
+    //                                 Ok(text) => {
+    //                                     let lines = text.lines().collect::<Vec<&str>>();
+    //                                     let pattern = format!("{}'s team", player);
 
-                                        let scores =  fuzzy_search(&pattern, &lines);
-                                        let lines = lines.clone();
-                                        let sorted_lines = lines.into_iter().enumerate().skip(1)
-                                        .map(|(i, line)| (line, OrderedFloat(scores[i-1].1)))
-                                        .sorted_by_key(|&(_line, prev_score)| -prev_score)
-                                        .map(|(line, _)| line).collect::<Vec<&str>>();
+    //                                     let scores =  fuzzy_search(&pattern, &lines);
+    //                                     let lines = lines.clone();
+    //                                     let sorted_lines = lines.into_iter().enumerate().skip(1)
+    //                                     .map(|(i, line)| (line, OrderedFloat(scores[i-1].1)))
+    //                                     .sorted_by_key(|&(_line, prev_score)| -prev_score)
+    //                                     .map(|(line, _)| line).collect::<Vec<&str>>();
 
-                                        let team = sorted_lines.first().unwrap();
+    //                                     let team = sorted_lines.first().unwrap();
 
-                                        // get player team
-                                        let mons: Vec<Pokemon> = team.split('/')
-                                            .take(6)
-                                            .map(|name| Pokemon::new(name.trim()))
-                                            .collect::<Vec<Pokemon>>();
-                                        let player_team = Team::new(mons);
-                                        let mut team_exists = false;
-                                        for team in TEAMS.read().await.iter() {
-                                            if team == &player_team {
-                                                team_exists = true;
-                                                break;
-                                            }
-                                        }
+    //                                     // get player team
+    //                                     let mons: Vec<Pokemon> = team.split('/')
+    //                                         .take(6)
+    //                                         .map(|name| Pokemon::new(name.trim()))
+    //                                         .collect::<Vec<Pokemon>>();
+    //                                     let player_team = Team::new(mons);
+    //                                     let mut team_exists = false;
+    //                                     for team in TEAMS.read().await.iter() {
+    //                                         if team == &player_team {
+    //                                             team_exists = true;
+    //                                             break;
+    //                                         }
+    //                                     }
 
-                                        println!("added team");
-                                        if !team_exists {
-                                            TEAMS.write().await.push(player_team);
+    //                                     println!("added team");
+    //                                     if !team_exists {
+    //                                         TEAMS.write().await.push(player_team);
 
-                                            println!("printing team names: ");
-                                            for mon in &TEAMS.read().await[0].pokemon {
-                                                println!("{}", mon.get_name());
-                                            }
-                                        }
+    //                                         println!("printing team names: ");
+    //                                         for mon in &TEAMS.read().await[0].pokemon {
+    //                                             println!("{}", mon.get_name());
+    //                                         }
+    //                                     }
 
-                                        IN_BATTLE.set_state(TRUE);
-                                    },
-                                    Err(e) => {
-                                        eprintln!("Error OCRing image: {}", e);
-                                        IN_BATTLE.set_state(FALSE);
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    Err(e) => {
-                        eprintln!("Error OCRing image: {}", e);
-                        IN_BATTLE.set_state(FALSE);
-                    }
-                }
+    //                                     IN_BATTLE.set_state(TRUE);
+    //                                 },
+    //                                 Err(e) => {
+    //                                     eprintln!("Error OCRing image: {}", e);
+    //                                     IN_BATTLE.set_state(FALSE);
+    //                                 }
+    //                             }
+    //                         }
+    //                     }
+    //                 },
+    //                 Err(e) => {
+    //                     eprintln!("Error OCRing image: {}", e);
+    //                     IN_BATTLE.set_state(FALSE);
+    //                 }
+    //             }
                 
-            }
-            // for (label, img) in &images { (for the future)
-            //     ocr::ocr_segment(img);
-            // }
+    //         }
+    //         // for (label, img) in &images { (for the future)
+    //         //     ocr::ocr_segment(img);
+    //         // }
         },
         Err(e) => eprintln!("Error segmenting image: {}", e)
     }
