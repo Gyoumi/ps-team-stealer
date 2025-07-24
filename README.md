@@ -1,6 +1,6 @@
 # 🎞️ Pokémon Showdown Team Stealer
 
-An advanced Rust application that automatically extracts Pokémon teams from YouTube Showdown Live videos. It combines video streaming, image segmentation, OCR, and fuzzy data validation to reconstruct structured team data from gameplay footage.
+A fully Rust application that automatically extracts Pokémon teams from YouTube Showdown Live videos. It combines video streaming, image segmentation, OCR, and fuzzy data validation to reconstruct structured team data from gameplay footage.
 
 ## ✨ Features
 
