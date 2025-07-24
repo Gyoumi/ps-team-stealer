@@ -20,5 +20,6 @@ else
   echo "Model $MODEL already present, skipping pull."
 fi
 
+echo "starting ollama server..."
 # Wait for the Ollama server to exit (keep container running)
 wait $OLLAMA_PID 
