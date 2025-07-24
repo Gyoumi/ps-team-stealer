@@ -1,5 +1,6 @@
 use crate::image::ocr::OllamaOcrResult;
 use crate::text::pokemon::Pokemon;
+use crate::text::paste::upload_team;
 
 pub struct Team {   
     pub pokemon: Vec<Pokemon>,
@@ -19,7 +20,7 @@ impl Team {
         true
     }
 
-    pub fn update_pokemon(&mut self, pkmn_name: &str, json_string: &str) -> bool {
+    pub async fn update_pokemon(&mut self, pkmn_name: &str, json_string: &str) -> bool {
         let pkmn = self.pokemon.iter_mut().find(|pkmn| pkmn.get_name() == pkmn_name);
         if pkmn.is_none() {
             return false;
@@ -68,6 +69,8 @@ impl Team {
 
         println!("mon ready: {:?}", mon);
         println!("export format: {}", mon.to_import_string());
+
+        upload_team(mon.to_import_string()).await;
 
         tera_res && moves_res && ability_res && item_res && hp_res && stat_res
     }

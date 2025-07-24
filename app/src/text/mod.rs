@@ -4,3 +4,4 @@ pub mod team;
 pub mod battle;
 pub mod pokeapi;
 pub mod showdown;
+pub mod paste;

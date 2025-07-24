@@ -2944,6 +2944,7 @@ dependencies = [
  "ort",
  "ort-sys",
  "paddle-ocr-rs",
+ "reqwest",
  "rten",
  "rust-fuzzy-search",
  "rustemon",

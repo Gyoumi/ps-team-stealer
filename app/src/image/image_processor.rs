@@ -72,7 +72,7 @@ pub async fn process_image(id: usize, image: RgbImage) {
                         match ollama_res {
                             Ok(text) => {
                                 println!("OLLAMA result for {}: {}", label, text);
-                                let updated = &TEAMS.write().await[battle_idx].update_pokemon(&mon, &text);
+                                let updated = &TEAMS.write().await[battle_idx].update_pokemon(&mon, &text).await;
                             }
                             Err(e) => eprintln!("Error OCRing image: {}", e)
                         }
