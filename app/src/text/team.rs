@@ -68,7 +68,7 @@ impl Team {
         }
 
         println!("mon ready: {:?}", mon);
-        println!("export format: {}", mon.to_import_string());
+        println!("{}", mon.to_import_string());
 
         println!("uploading team");
         upload_team(mon.to_import_string()).await;
