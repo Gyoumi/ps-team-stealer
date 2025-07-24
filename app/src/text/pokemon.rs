@@ -343,8 +343,8 @@ impl Pokemon {
     pub fn to_import_string(&self) -> String {
         let name_segment = 
         match &self.nickname {
-            Some(nickname) => format!("{} ({})", nickname, self.name),
-            None => format!("{}", self.name),
+            Some(nickname) => format!("{} ({})", nickname, capitalise_first(self.name)),
+            None => format!("{}", capitalise_first(self.name)),
         };
 
         let item_segment = 
@@ -364,7 +364,7 @@ impl Pokemon {
         };
         let tera_line = 
             match &self.tera {
-                Some(tera) => format!("Tera Type: {}\n", tera),
+                Some(tera) => format!("Tera Type: {}\n", capitalise_first(tera)),
                 None => String::new(),
             };
         let ev_line = 

@@ -51,7 +51,7 @@ pub fn capitalise_first(s: &str) -> String {
             caps_next = false;
         } else {
             result.push(c);
-            caps_next = c == '-';
+            caps_next = c == '-' || c == ' ';
         }
     }
     result
