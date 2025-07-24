@@ -1,54 +1,87 @@
-# 🎞️ Rust Video Frame Processing & Segmentation Pipeline
+# 🎞️ Pokémon Showdown Team Stealer
 
-An asynchronous, high-performance Rust application that streams and processes video frames directly from YouTube using `yt-dlp` and `ffmpeg`, and performs ONNX-based image segmentation on each frame.
+An advanced Rust application that automatically extracts Pokémon teams from YouTube Showdown Live videos. It combines video streaming, image segmentation, OCR, and fuzzy data validation to reconstruct structured team data from gameplay footage.
 
 ## ✨ Features
 
-- 🔁 **Streaming without file I/O**: Streams video as raw RGB frames via `yt-dlp` → `ffmpeg` → Rust using in-memory pipes.
-- ⚙️ **Concurrent frame processing**: Uses an MPMC channel model to process frames with a pool of async worker tasks (configurable via `WORKER_COUNT` env variable).
-- 🧠 **ONNX-based image segmentation**: Each frame is segmented using a custom-trained YOLOv8 neural network (exported to ONNX) with custom labeling, and bounding boxes are drawn on detected objects.
-- 💾 **Segmented frame output**: Segmented frames are saved as PNGs in the `segment/` directory.
-- 📊 **Real-time progress tracking**: Displays terminal progress bar based on estimated video size using `indicatif`.
-- 🚧 **Planned: OCR support** (not yet implemented).
+- 🎥 **Direct YouTube streaming:** Streams video frames directly from YouTube using `yt-dlp` and `ffmpeg` using 
+in-memory pipes.
+- ⚡ **Concurrent async processing:** Utilizes a multi-producer, multi-consumer async pipeline for high throughput.
+- 🧠 **ONNX-based image segmentation:** Uses a custom YOLOv8 ONNX model to detect and segment relevant UI elements in each frame.
+- 🔤 **Multi-backend OCR:** Supports multiple OCR engines (RTen/ocrs, PaddleOCR, and LLM-based Ollama) for robust text extraction from segmented images.
+- 🧩 **Fuzzy data validation:** Matches and corrects extracted names, moves, abilities, and items using fuzzy search and live Pokédex data.
+- 🏆 **Team and battle reconstruction:** Automatically assembles structured Pokémon teams and battle state from noisy video data.
+- 📊 **Real-time progress tracking:** Displays a terminal progress bar and logs detailed processing information.
+- 🐳 **Docker Compose deployment:** Easily run the app and all dependencies (including Ollama for LLM OCR) with a single command.
+- 🛠️ **Extensible and customizable:** Swap models, adjust pipeline steps, or add new OCR backends and validation logic as needed.
 
-## 🧰 Tech Stack
+## 🧩 How It Works: Pipeline Overview
 
-- [Rust](https://www.rust-lang.org/)
-- [Tokio](https://tokio.rs/) for async runtime
-- [yt-dlp](https://github.com/yt-dlp/yt-dlp) for YouTube video streaming
-- [ffmpeg](https://ffmpeg.org/) for video decoding
-- [indicatif](https://docs.rs/indicatif/) for terminal progress bars
-- [image](https://docs.rs/image/) crate for raw RGB image handling
-- [onnxruntime (ort)](https://crates.io/crates/ort) for ONNX model inference
-- [ndarray](https://crates.io/crates/ndarray) for tensor operations
-- [flume](https://crates.io/crates/flume) for async channels
-- [imageproc](https://crates.io/crates/imageproc) for drawing on images
+1. 🎥 **Video Streaming**
+   - Streams YouTube videos directly using [`yt-dlp`](https://github.com/yt-dlp/yt-dlp) and [`ffmpeg`](https://ffmpeg.org/)—no intermediate files, all in-memory.
 
-## 📦 Requirements
+2. 🖼️ **Frame Extraction**
+   - Decodes the video into raw RGB frames using the `image` crate and feeds them into an async processing pipeline.
 
-- Rust 1.70+
-- `yt-dlp` and `ffmpeg` installed and available in `$PATH`
-- Custom-trained YOLOv8 ONNX model file (with your custom labeling) at `src/image/model/` (see code for expected filename)
+3. 🧠 **Image Segmentation**
+   - Each frame is segmented using a custom-trained YOLOv8 ONNX model (via [`onnxruntime`](https://crates.io/crates/ort`)).
+   - Bounding boxes are drawn and relevant regions (e.g., Pokémon sprites, UI elements) are cropped for further analysis.
 
-## 🚀 Usage
+4. 🔤 **Optical Character Recognition (OCR)**
+   - Segmented image regions are processed with multiple OCR backends:
+     - 🟦 [`ocrs`](https://crates.io/crates/ocrs) (RTen models)
+     - 🟩 [`paddle_ocr_rs`](https://crates.io/crates/paddle-ocr-rs) (PaddleOCR ONNX models)
+     - 🤖 [`ollama_rs`](https://crates.io/crates/ollama-rs) (LLM-based, for structured JSON extraction)
+   - Extracts Pokémon names, stats, moves, abilities, and more from the video UI.
 
-1. Clone the repository and build the app:
+5. 🧩 **Team Assembly & Fuzzy Validation**
+   - Extracted data is validated and enriched using:
+     - 📄 Local JSON datasets (Pokémon, moves, abilities, items, natures)
+     - 🦊 [`rustemon`](https://crates.io/crates/rustemon) for live Pokédex data
+     - 🔍 [`rust_fuzzy_search`](https://crates.io/crates/rust-fuzzy-search) for typo-tolerant matching
+   - Assembles a structured representation of each team and battle, even in the presence of OCR errors or UI noise.
+
+6. 💾 **Output**
+   - Segmented frames and extracted team data are saved in the `segment/` directory.
+   - Progress and results are logged to the terminal.
+
+## 🛠️ Key Tools & Crates
+
+- 🦀 **Rust async runtime:** [`tokio`](https://tokio.rs/)
+- 🎥 **Video streaming:** `yt-dlp`, `ffmpeg`
+- 🖼️ **Image processing:** [`image`](https://docs.rs/image/), [`imageproc`](https://crates.io/crates/imageproc`)
+- 🧠 **ONNX inference:** [`onnxruntime (ort)`](https://crates.io/crates/ort)
+- 🔤 **OCR:** [`ocrs`](https://crates.io/crates/ocrs), [`paddle_ocr_rs`](https://crates.io/crates/paddle-ocr-rs), [`ollama_rs`](https://crates.io/crates/ollama-rs)
+- 🦊 **Pokémon data:** [`rustemon`](https://crates.io/crates/rustemon), local JSON
+- 🔍 **Fuzzy search:** [`rust_fuzzy_search`](https://crates.io/crates/rust-fuzzy-search)
+- 🔗 **Async channels:** [`flume`](https://crates.io/crates/flume)
+- 📊 **Progress bars:** [`indicatif`](https://docs.rs/indicatif/)
+- 🧩 **State management:** [`once_cell`](https://crates.io/crates/once_cell), [`serde`](https://crates.io/crates/serde)
+
+## 🐳 Running with Docker Compose (Recommended)
+
+The easiest way to run the app is with Docker Compose, which sets up both the main application and an Ollama service for LLM-based OCR.
+
+1. 🏗️ From the `app/` directory, build and start all services:
    ```bash
-   cargo build --release
+   docker-compose up --build
    ```
-2. Ensure you have the ONNX model in `src/image/model/` as required by the code.
-3. Run the app (by default, it processes a hardcoded YouTube URL in `main.rs`):
+   This will build and start two services:
+   - 🤖 `ollama`: Runs the Ollama LLM server (using `Dockerfile.ollama` and `start-ollama.sh`)
+   - 🦀 `app`: Runs the main Rust application, configured to use the Ollama service for OCR
+
+2. 📂 The `docker-compose.yml` mounts the necessary model and data directories. You can adjust volumes and environment variables as needed in the compose file.
+
+3. 🛑 To stop the services:
    ```bash
-   cargo run --release
+   docker-compose down
    ```
-   You can set the number of worker threads with the `WORKER_COUNT` environment variable:
-   ```bash
-   WORKER_COUNT=4 cargo run --release
-   ```
-4. Segmented frames will be saved as PNGs in the `segment/` directory (e.g., `segment/segmented_0.png`).
+
+> **Tip:** You can set environment variables (e.g., `WORKER_COUNT`, `YOLO_MODEL`, `LABELS`, `OLLAMA_HOST`, `OLLAMA_PORT`) in the `docker-compose.yml` or via an `.env` file.
 
 ## 📝 Notes
 
-- OCR functionality is planned but not yet implemented.
-- You can modify the YouTube URL in `app/src/main.rs` to process a different video.
-- The segmentation model and output format are customizable in the code.
+- 📝 You can modify the YouTube URL in `app/src/main.rs` to process a different video.
+- 🧠 The segmentation model, OCR backend, and output format are customizable in the code and via environment variables.
+- 🦊 The application validates and enriches extracted data using local JSON datasets and the Rustemon API.
+- 📂 For best results, ensure your models are compatible and placed in the correct directory.

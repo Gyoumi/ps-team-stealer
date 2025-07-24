@@ -1,0 +1,67 @@
+use std::collections::HashMap;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum Weather {
+    Sand,
+    Sun,
+    Rain,
+    Snow,
+    Hail,
+    Tailwind,
+}
+
+pub type WeatherRange = (u32, u32);
+
+pub struct Battle {
+    opponent: String,
+    highest_turn: u32,
+    weather_turns: HashMap<Weather, Vec<WeatherRange>>,
+    team_id: usize,
+}
+
+impl Battle {
+    pub fn new(opponent: &str, team_id: usize) -> Self {
+        Self {
+            opponent: opponent.to_string(),
+            highest_turn: 0,
+            weather_turns: HashMap::new(),
+            team_id,
+        }
+    }
+
+    pub fn update_highest_turn(&mut self, turn: u32) {
+        self.highest_turn = self.highest_turn.max(turn);
+    }
+
+    pub fn add_weather_start(&mut self, weather: Weather, turn: u32) {
+        self.weather_turns.entry(weather).or_insert(Vec::new()).push((turn, turn));
+    }
+
+    pub fn update_weather_end(&mut self, weather: Weather, turn: u32) {
+        if let Some(ranges) = self.weather_turns.get_mut(&weather) {
+            if let Some(last_range) = ranges.last_mut() {
+                last_range.1 = turn;
+            }
+        }
+    }
+
+    pub fn get_weather_turns(&self, weather: Weather) -> Option<&Vec<WeatherRange>> {
+        self.weather_turns.get(&weather)
+    }
+
+    pub fn get_weathers_for_turn(&self, turn: u32) -> Vec<Weather> {
+        self.weather_turns.iter().filter(|(_, ranges)| ranges.iter().any(|(start, end)| turn >= *start && turn <= *end)).map(|(weather, _)| *weather).collect()
+    }
+
+    pub fn get_highest_turn(&self) -> u32 {
+        self.highest_turn
+    }
+
+    pub fn get_team_id(&self) -> usize {
+        self.team_id
+    }
+
+    pub fn get_opponent(&self) -> &str {
+        &self.opponent
+    }
+}

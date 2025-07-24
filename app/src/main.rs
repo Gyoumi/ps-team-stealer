@@ -1,24 +1,30 @@
 mod video;
 mod util;
-use video::video::start;
 use dotenv::dotenv;
+
 // mod ocr;
 // use ocr::read_frame;
 
 mod image;
 use image::image_processor;
 
+mod text;
+use text::pokeapi::init_pokemon_data;
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>>{
     dotenv().ok();
+    init_pokemon_data().await;
     let url = "https://www.youtube.com/watch?v=5xjQgr8xN9s";
+    let image1 = ::image::open("./frame_0.png").unwrap().into_rgb8();
+    let image2 = ::image::open("./frame_50.png").unwrap().into_rgb8();
+    image_processor::process_image(0, image1).await;
+    image_processor::process_image(50, image2).await;
 
-    //image_processor::process_image(50).await;
-
-    //Ok(())
-
-    start(url).await?;
     Ok(())
+
+    // start(url).await?;
+    // Ok(())
 
     // let img_file = "./src/frames/frame_50.bmp";
     // let img = image::open(img_file).map(|image| image.into_luma8())?;

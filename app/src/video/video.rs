@@ -1,6 +1,5 @@
 use tokio::process::Command;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
-use tokio::task::{self, JoinHandle};
 use flume::{Sender, Receiver};
 use core::str;
 use std::error::Error;
@@ -151,9 +150,9 @@ async fn process_video(mut video_stream: tokio::process::ChildStdout, frame_size
     };
     let (tx, rx): (Sender<(Arc<Vec<u8>>, usize)>, Receiver<(Arc<Vec<u8>>, usize)>) = flume::unbounded(); 
 
-    // spsc for each worker
+    // mpmc but predefine number of consumers
     for id in 0..worker_count {
-        let mut rx = rx.clone();        
+        let rx = rx.clone();        
         let frame_size = frame_size.clone();
 
         tokio::spawn(worker_task(id, rx, frame_size));
@@ -187,7 +186,7 @@ async fn process_video(mut video_stream: tokio::process::ChildStdout, frame_size
 
 async fn worker_task(
     id: usize,
-    mut rx: Receiver<(Arc<Vec<u8>>, usize)>,
+    rx: Receiver<(Arc<Vec<u8>>, usize)>,
     frame_size: Resolution
 ) {
     while let Ok((frame_data, frame_number)) = rx.recv_async().await {

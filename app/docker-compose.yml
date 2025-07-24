@@ -1,0 +1,24 @@
+services:
+  ollama:
+    build:
+      context: .
+      dockerfile: Dockerfile.ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+      - ./start-ollama.sh:/start-ollama.sh
+    entrypoint: ["/bin/sh", "/start-ollama.sh"]
+
+  app:
+    build: .
+    depends_on:
+      - ollama
+    volumes:
+      - /root/ps-team-stealer/app:/app
+    environment:
+      - OLLAMA_HOST=http://ollama
+      - OLLAMA_PORT=11434
+
+volumes:
+  ollama_data: 

@@ -19,3 +19,8 @@ app/src/frames
 app/frame_50.png
 app/src/image/model/*
 app/target
+app/ollama-*
+app/.env
+*.png
+*.jpg
+app/http-cacache/*
