@@ -15,12 +15,15 @@ pub async fn upload_team(team: String) {
         .await;
 
     if let Ok(res) = res {
+        let location = res
+            .headers()
+            .get("Location")
+            .and_then(|l| l.to_str().ok())
+            .map(|s| s.to_string());
+
         let text = res.text().await.unwrap();
         println!("{}", text);
-        // If you want to get the Location header:
-        // (You may need to clone the response before reading the body if you want both)
-        // let location = res.headers().get("Location").map(|l| l.to_str().unwrap());
-        // println!("Location: {:?}", location);
+        println!("Location: {:?}", location.unwrap());
     } else {
         println!("Error: {}", res.unwrap_err());
     }

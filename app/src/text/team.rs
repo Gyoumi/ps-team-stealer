@@ -70,6 +70,7 @@ impl Team {
         println!("mon ready: {:?}", mon);
         println!("export format: {}", mon.to_import_string());
 
+        println!("uploading team");
         upload_team(mon.to_import_string()).await;
 
         tera_res && moves_res && ability_res && item_res && hp_res && stat_res
