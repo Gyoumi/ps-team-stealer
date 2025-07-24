@@ -4,6 +4,7 @@ use super::image_segmenter;
 use super::ocr;
 use once_cell::sync::Lazy;
 use crate::text::battle::Battle;
+use crate::text::text_processor::validate_pokemon;
 use crate::text::text_processor::BATTLES;
 use crate::text::{pokemon::Pokemon, team::Team, text_processor::TEAMS};
 use crate::util::load_flag::{AsyncLoadFlag, FALSE, LOADING, TRUE};
@@ -30,34 +31,40 @@ pub async fn process_image(id: usize, image: RgbImage) {
 
                 //println!("ocr_segment() took {:?}", duration);
 
-                let label = label.clone(); // clone the key (String)
-                let img = img_vec.get(0).unwrap().clone(); // clone the image
+                let label = label.clone(); 
+                let img = img_vec.get(0).unwrap().clone(); 
 
-                let h1 = tokio::spawn({
-                    let label = label.clone();
-                    let img = img.clone();
-                    async move {
-                        let result2 = ocr::ollama_ocr(&img).await;
-                        match result2 {
-                            Ok(text) => println!("OLLAMA result for {}: {}", label, text),
-                            Err(e) => eprintln!("Error OCRing image: {}", e)
-                        }
-                    }
-                });
+                let result = ocr::ocrs_ocr(&img);
+                match result {
+                    Ok(text) => println!("OCRS result for {}: {}", label, text),
+                    Err(e) => eprintln!("Error OCRing image: {}", e)
+                }
 
-                let h2 = tokio::spawn({
-                    let label = label.clone();
-                    let img = img.clone();
-                    async move {
-                        let result = ocr::ocrs_ocr(&img);
-                        match result {
-                            Ok(text) => println!("OCRS result for {}: {}", label, text),
-                            Err(e) => eprintln!("Error OCRing image: {}", e)
-                        }
-                    }
-                });
+                // let h1 = tokio::spawn({
+                //     let label = label.clone();
+                //     let img = img.clone();
+                //     async move {
+                //         let result2 = ocr::ollama_ocr(&img).await;
+                //         match result2 {
+                //             Ok(text) => println!("OLLAMA result for {}: {}", label, text),
+                //             Err(e) => eprintln!("Error OCRing image: {}", e)
+                //         }
+                //     }
+                // });
 
-                tokio::join!(h1, h2);
+                // let h2 = tokio::spawn({
+                //     let label = label.clone();
+                //     let img = img.clone();
+                //     async move {
+                //         let result = ocr::ocrs_ocr(&img);
+                //         match result {
+                //             Ok(text) => println!("OCRS result for {}: {}", label, text),
+                //             Err(e) => eprintln!("Error OCRing image: {}", e)
+                //         }
+                //     }
+                // });
+
+                // tokio::join!(h1, h2);
                 return;
             }
 
@@ -139,7 +146,14 @@ pub async fn process_image(id: usize, image: RgbImage) {
 
                                     let mons: Vec<Pokemon> = chat_lines[idx+1].split('/')
                                         .take(6)
-                                        .map(|name| Pokemon::new(name.trim()))
+                                        .map(|name| {
+                                            let validated = validate_pokemon(name.trim());
+                                            match validated {
+                                                Some(mon) => Pokemon::new(&mon),
+                                                None => Pokemon::new("")
+                                            }
+                                        })
+                                        .filter(|pkmn| !pkmn.get_name().is_empty())
                                         .collect::<Vec<Pokemon>>();
 
                                     let player_team = Team::new(mons);
@@ -156,6 +170,7 @@ pub async fn process_image(id: usize, image: RgbImage) {
                                     TEAMS.write().await.push(player_team);
                                     let battle = Battle::new(opponent, TEAMS.read().await.len() - 1);
                                     BATTLES.write().await.push(battle);
+                                    TEAMS.read().await.last().unwrap().print_names();
                                     IN_BATTLE.set_state(TRUE);
 
                                 } else {

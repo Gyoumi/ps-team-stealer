@@ -2,7 +2,8 @@ use once_cell::sync::Lazy;
 use std::sync::{Mutex, Arc};
 use tokio::sync::RwLock;
 use std::collections::HashMap;
-use crate::text::{team::Team, battle::Battle};
+use crate::text::{team::Team, battle::Battle, pokeapi::{ABILITIES, ITEMS, MOVES, NATURES, TYPES, POKEMON_SPECIES}};
+use rust_fuzzy_search::{fuzzy_search_best_n};
 
 pub static TEAMS: Lazy<Arc<RwLock<Vec<Team>>>> = Lazy::new(|| Arc::new(RwLock::new(Vec::new())));
 pub static BATTLES: Lazy<Arc<RwLock<Vec<Battle>>>> = Lazy::new(|| Arc::new(RwLock::new(Vec::new())));
@@ -14,53 +15,97 @@ pub fn process_text(image_id: String, pokemon_name: String) {
     results.entry(image_id).or_insert_with(Vec::new).push(pokemon_name);
 }
 
-// /// Convert an RgbImage to a base64-encoded PNG string
-// pub fn image_to_base64(image: &RgbImage) -> Result<String, Box<dyn std::error::Error>> {
-//     // Create a buffer to hold the PNG data
-//     let mut buffer = Cursor::new(Vec::new());
-    
-//     // Encode the image as PNG to the buffer
-//     image.write_with_encoder(image::codecs::PngEncoder::new(&mut buffer))?;
-    
-//     // Get the PNG data as bytes
-//     let png_data = buffer.into_inner();
-    
-//     // Encode to base64
-//     let base64_string = base64::Engine::encode(&base64::engine::general_purpose::STANDARD, png_data);
-    
-//     Ok(base64_string)
-// }
+fn validate_name<'a, I, F>(
+    input: &str,
+    all_names: I,
+    exact_check: F,
+) -> Option<String>
+where
+    I: IntoIterator<Item = &'a str>,
+    F: Fn(&str) -> bool,
+{
+    let iter = input.trim().to_lowercase().split_whitespace().collect::<Vec<&str>>().join("-");
 
-// /// Convert an RgbImage to a base64-encoded JPEG string (smaller file size)
-// pub fn image_to_base64_jpeg(image: &RgbImage, quality: u8) -> Result<String, Box<dyn std::error::Error>> {
-//     // Create a buffer to hold the JPEG data
-//     let mut buffer = Cursor::new(Vec::new());
-    
-//     // Encode the image as JPEG to the buffer
-//     image.write_with_encoder(image::codecs::JpegEncoder::new_with_quality(&mut buffer, quality))?;
-    
-//     // Get the JPEG data as bytes
-//     let jpeg_data = buffer.into_inner();
-    
-//     // Encode to base64
-//     let base64_string = base64::Engine::encode(&base64::engine::general_purpose::STANDARD, jpeg_data);
-    
-//     Ok(base64_string)
-// }
+    if exact_check(&iter) {
+        return Some(capitalise_first(&iter));
+    }
 
-// /// Convert an RgbImage to a base64-encoded WebP string (smallest file size)
-// pub fn image_to_base64_webp(image: &RgbImage, quality: f32) -> Result<String, Box<dyn std::error::Error>> {
-//     // Create a buffer to hold the WebP data
-//     let mut buffer = Cursor::new(Vec::new());
-    
-//     // Encode the image as WebP to the buffer
-//     image.write_with_encoder(image::codecs::WebPEncoder::new_with_quality(&mut buffer, quality))?;
-    
-//     // Get the WebP data as bytes
-//     let webp_data = buffer.into_inner();
-    
-//     // Encode to base64
-//     let base64_string = base64::Engine::encode(&base64::engine::general_purpose::STANDARD, webp_data);
-    
-//     Ok(base64_string)
-// }
+    let names_vec: Vec<&str> = all_names.into_iter().collect();
+    let best_match = fuzzy_search_best_n(&iter, &names_vec, 1);
+
+    match best_match.first() {
+        Some((name, score)) if *score >= 0.6 => Some(capitalise_first(name)),
+        _ => None,
+    }
+}
+
+fn capitalise_first(s: &str) -> String {
+    let mut result = String::with_capacity(s.len());
+    let mut caps_next = true;
+    for c in s.chars() {
+        if caps_next && c.is_ascii_alphabetic() {
+            for up in c.to_uppercase() {
+                result.push(up);
+            }
+            caps_next = false;
+        } else {
+            result.push(c);
+            caps_next = c == '-';
+        }
+    }
+    result
+}
+
+pub fn validate_pokemon(pokemon_name: &str) -> Option<String> {
+    let species = POKEMON_SPECIES.get()?;
+    validate_name(
+        pokemon_name,
+        species.keys().map(|s| s.as_str()),
+        |name| species.contains_key(name),
+    )
+}
+
+pub fn validate_move(move_name: &str) -> Option<String> {
+    let moves = MOVES.get()?;
+    validate_name(
+        move_name,
+        moves.iter().map(|s| s.as_str()),
+        |name| moves.contains(name),
+    )
+}
+
+pub fn validate_ability(ability_name: &str) -> Option<String> {
+    let abilities = ABILITIES.get()?;
+    validate_name(
+        ability_name,
+        abilities.iter().map(|s| s.as_str()),
+        |name| abilities.contains(name),
+    )
+}
+
+pub fn validate_items(item_name: &str) -> Option<String> {
+    let items = ITEMS.get()?;
+    validate_name(
+        item_name,
+        items.iter().map(|s| s.as_str()),
+        |name| items.contains(name),
+    )
+}
+
+pub fn validate_types(type_name: &str) -> Option<String> {
+    let types = TYPES.get()?;
+    validate_name(
+        type_name,
+        types.iter().map(|s| s.as_str()),
+        |name| types.contains(name),
+    )
+}
+
+pub fn validate_nature(nature_name: &str) -> Option<String> {
+    let natures = NATURES.get()?;
+    validate_name(
+        nature_name,
+        natures.iter().map(|n| n.name.as_str()),
+        |name| natures.iter().any(|n| n.name == name),
+    )
+}

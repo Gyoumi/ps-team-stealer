@@ -12,6 +12,10 @@ impl Team {
     pub fn to_import_string(&self) -> String {
         self.pokemon.iter().map(|pkmn| pkmn.to_import_string()).collect::<Vec<String>>().join("\n")
     }
+
+    pub fn print_names(&self) {
+        println!("{}", self.pokemon.iter().map(|pkmn| pkmn.get_name()).collect::<Vec<&str>>().join(", "));
+    }
 }
 
 impl PartialEq for Team {
