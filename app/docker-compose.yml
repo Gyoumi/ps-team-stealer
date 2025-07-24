@@ -14,8 +14,8 @@ services:
       - ollama
     volumes:
       - /root/ps-team-stealer/app:/app
-    # environment:
-    #   - OLLAMA_URL=http://ollama:11434
+    environment:
+      - OLLAMA_URL=http://ollama:11434
 
 volumes:
   ollama_data: 

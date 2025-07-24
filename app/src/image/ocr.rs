@@ -114,7 +114,9 @@ pub fn ocrs_ocr(img: &RgbImage) -> Result<String, ModelError> {
 
 
 pub async fn ollama_ocr(image: &RgbImage) -> Result<String, ModelError> {
-    let ollama = Ollama::default();
+    // let ollama = Ollama::default();
+    let ollama_url = std::env::var("OLLAMA_URL").unwrap_or_else(|_| "http://ollama:11434".to_string());
+    let ollama = Ollama::new(ollama_url);
     //println!("Ollama connected");
     let model = "hf.co/openbmb/MiniCPM-o-2_6-gguf:Q4_K_M";
     let prompt = "Please fill the contents of this JSON based on the text in the image. 
