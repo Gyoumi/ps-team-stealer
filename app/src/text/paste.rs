@@ -11,7 +11,7 @@ pub async fn upload_team(team: String) {
     params.insert("paste", team);
 
     let res = client
-        .post("https://pokepasat.es/create")
+        .post("https://pokepast.es/create")
         .header(CONTENT_TYPE, "application/x-www-form-urlencoded")
         .form(&params)
         .send()
@@ -23,7 +23,7 @@ pub async fn upload_team(team: String) {
                 .headers()
                 .get("Location")
                 .and_then(|l| l.to_str().ok())
-                .map(|s| format!("https://pokepasat.es{}", s));
+                .map(|s| format!("https://pokepast.es{}", s));
             println!("Paste URL: {:?}", location);
         } else {
             println!("Unexpected response: {:?}", res.status());
