@@ -1,31 +1,5 @@
 use std::collections::{HashMap, HashSet};
-use once_cell::sync::OnceCell;
-
-pub static NATURES: OnceCell<HashMap<String, HashMap<String, String>>> = OnceCell::new();
-pub static ABILITIES: OnceCell<HashSet<String>> = OnceCell::new();
-pub static ITEMS: OnceCell<HashSet<String>> = OnceCell::new();
-pub static POKEMON_NAMES: OnceCell<HashSet<String>> = OnceCell::new();
-pub static MOVES: OnceCell<HashSet<String>> = OnceCell::new();
-pub static TYPES: OnceCell<HashSet<String>> = OnceCell::new();
-pub static BASE_STATS: OnceCell<HashMap<String, HashMap<String, u32>>> = OnceCell::new();
-
-pub fn init_pokemon_data() {
-    let natures = fetch_natures();
-    let abilities = fetch_abilities();
-    let items = fetch_items();
-    let pokemon_names = fetch_pokemon_names();
-    let moves = fetch_moves();
-    let types = fetch_types();
-    let base_stats = fetch_base_stats();
-
-    NATURES.set(natures).unwrap();
-    ABILITIES.set(abilities).unwrap();
-    ITEMS.set(items).unwrap();
-    POKEMON_NAMES.set(pokemon_names).unwrap();
-    MOVES.set(moves).unwrap();
-    TYPES.set(types).unwrap();
-    BASE_STATS.set(base_stats).unwrap();
-}
+use crate::text::pokeapi::{ABILITIES, ITEMS, MOVES, NATURES, TYPES, POKEMON_SPECIES, PokemonBaseStat,Stat, get_stat_enum};
 
 #[derive(Default, Debug)]
 pub struct Pokemon {
@@ -117,7 +91,7 @@ impl Pokemon {
     }
 
     pub fn set_hp(&mut self, raw_hp: u32) {
-        let base_hp = BASE_STATS.get().unwrap().get(self.name.as_str()).unwrap().get("hp").unwrap();
+        let base_hp = POKEMON_SPECIES.get().unwrap().get(self.name.as_str()).unwrap().base_stats.get(&Stat::HP).unwrap();
         if raw_hp < min_hp(base_hp) || raw_hp > max_hp(&base_hp) {
             return;
         }
@@ -131,7 +105,7 @@ impl Pokemon {
     }
 
     pub fn set_attack(&mut self, raw_attack: u32) {
-        let base_attack = BASE_STATS.get().unwrap().get(self.name.as_str()).unwrap().get("attack").unwrap();
+        let base_attack = POKEMON_SPECIES.get().unwrap().get(self.name.as_str()).unwrap().base_stats.get(&Stat::Attack).unwrap();
         if raw_attack < min_stat(&base_attack) || raw_attack > max_stat(&base_attack) {
             return; // value misread
         }
@@ -143,8 +117,12 @@ impl Pokemon {
                 self.pos_nature = Some("attack".to_string());
 
                 if let Some(neg_nature) = self.neg_nature.as_ref() {
-                    let nature = NATURES.get().unwrap().get("attack").unwrap().get(neg_nature).unwrap();
-                    self.set_nature(nature);
+                    let dec_stat = get_stat_enum(neg_nature);
+                    let nature = NATURES.get().unwrap().iter()
+                    .find(|n| n.increased_stat == Stat::Attack && n.decreased_stat == dec_stat);
+                    if let Some(nature) = nature {
+                        self.set_nature(nature.name.as_str());
+                    }
                 }
             }
             self.attack = evs as u8;
@@ -410,7 +388,7 @@ fn fetch_types() -> HashSet<String> {
     HashSet::new()
 }
 
-fn fetch_base_stats() -> HashMap<String, HashMap<String, u32>> {
+fn fetch_POKEMON_SPECIES() -> HashMap<String, PokemonBaseStat> {
     // TODO: fetch base stats from pokemon api
     HashMap::new()
 }

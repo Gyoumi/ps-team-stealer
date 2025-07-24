@@ -31,7 +31,6 @@ pub fn paddle_crate_ocr(image: &RgbImage) -> Result<String, ModelError> {
         2,
     )?;
 
-    println!("detecting text");
     let result = ocr.detect(
         image,
         50,
