@@ -11,6 +11,27 @@ use std::error::Error;
 use image::{RgbImage, GenericImageView};
 use itertools::Itertools;
 use paddle_ocr_rs::ocr_lite::OcrLite;
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct OllamaOcrResult {
+    pub name: String,
+    pub nickname: Option<String>,
+    pub types: Vec<String>,
+    pub tera_type: Option<String>,
+    pub max_hp: u32,
+    pub remaining_hp: u32,
+    pub remaining_hp_percentage: f32,
+    pub ability: String,
+    pub item: Option<String>,
+    pub atk: u32,
+    pub def: u32,
+    pub spa: u32,
+    pub spd: u32,
+    pub spe: u32,
+    pub spe_range: bool,
+    pub moves: Vec<String>,
+}
 
 pub async fn ocr_segment(image: &RgbImage) -> Result<String, ModelError> {
     //let ocr_result = ollama_ocr(image).await?;
@@ -101,7 +122,7 @@ pub async fn ollama_ocr(image: &RgbImage) -> Result<String, ModelError> {
        name: string,
        nickname: string | null,
        types: string[],
-       tera_type: string,
+       tera_type: string | null,
        max_hp: number,
        remaining_hp: number,
        remaining_hp_percentage: number,
@@ -115,6 +136,7 @@ pub async fn ollama_ocr(image: &RgbImage) -> Result<String, ModelError> {
        spe_range: boolean,
        moves: string[],    
     } 
+    The stats (Atk, Def, SpA, SpD, Spe) should all be in a row next to each other.
     The 'spe_range' field should be true if 'Spe' is listed as a range between two numbers such as 'Spe {num1} to {num2}'. 
     It should be false if 'Spe' only has a single number. 
     Please ensure that all stats are prior to any modifiers. 

@@ -49,7 +49,19 @@ impl Battle {
         self.weather_turns.get(&weather)
     }
 
+    pub fn get_weathers_for_turn(&self, turn: u32) -> Vec<Weather> {
+        self.weather_turns.iter().filter(|(_, ranges)| ranges.iter().any(|(start, end)| turn >= *start && turn <= *end)).map(|(weather, _)| *weather).collect()
+    }
+
     pub fn get_highest_turn(&self) -> u32 {
         self.highest_turn
+    }
+
+    pub fn get_team_id(&self) -> usize {
+        self.team_id
+    }
+
+    pub fn get_opponent(&self) -> &str {
+        &self.opponent
     }
 }

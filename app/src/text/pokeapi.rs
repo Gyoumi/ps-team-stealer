@@ -202,7 +202,17 @@ async fn fetch_all_abilities() -> HashSet<String> {
     let client = RUSTEMON_CLIENT.get_or_init(|| RustemonClient::default());
     let result = pokemon::ability::get_all_entries(&client).await;
     if let Ok(abilities) = result {
-        abilities.into_iter().map(|ability| ability.name.to_string().split("-").join(" ")).collect::<HashSet<String>>()
+        let res = abilities.into_iter().map(|ability_resource| {
+            async move {
+                let ability = pokemon::ability::get_by_name(&ability_resource.name, &client).await;
+                if let Ok(ability) = ability {
+                    ability.names.iter().find(|name| name.language.name == "en").map(|name| name.name.clone()).unwrap_or(ability_resource.name.to_string().split("-").join(" "))
+                } else {
+                    ability_resource.name.to_string().split("-").join(" ")
+                }
+            }
+        });
+        future::join_all(res).await.into_iter().collect::<HashSet<String>>()
     } else {
         eprintln!("Failed to get all abilities");
         HashSet::new()
@@ -227,7 +237,17 @@ async fn fetch_all_items() -> HashSet<String> {
     let client = RUSTEMON_CLIENT.get_or_init(|| RustemonClient::default());
     let result = items::item::get_all_entries(&client).await;
     if let Ok(items) = result {
-        items.into_iter().map(|item| item.name.to_string().split("-").join(" ")).collect::<HashSet<String>>()
+        let res = items.into_iter().map(|item_resource| {
+            async move {
+                let item = items::item::get_by_name(&item_resource.name, &client).await;
+                if let Ok(item) = item {
+                    item.names.iter().find(|name| name.language.name == "en").map(|name| name.name.clone()).unwrap_or(item_resource.name.to_string().split("-").join(" "))
+                } else {
+                    item_resource.name.to_string().split("-").join(" ")
+                }
+            }
+        });
+        future::join_all(res).await.into_iter().collect::<HashSet<String>>()
     } else {
         eprintln!("Failed to get all items");
         HashSet::new()
@@ -252,7 +272,17 @@ async fn fetch_all_moves() -> HashSet<String> {
     let client = RUSTEMON_CLIENT.get_or_init(|| RustemonClient::default());
     let result = moves::move_::get_all_entries(&client).await;
     if let Ok(moves) = result {
-        moves.into_iter().map(|mv| mv.name.to_string().split("-").join(" ")).collect::<HashSet<String>>()
+        let res = moves.into_iter().map(|move_resource| {
+            async move {
+                let mv = moves::move_::get_by_name(&move_resource.name, &client).await;
+                if let Ok(mv) = mv {
+                    mv.names.iter().find(|name| name.language.name == "en").map(|name| name.name.clone()).unwrap_or(move_resource.name.to_string().split("-").join(" "))
+                } else {
+                    move_resource.name.to_string().split("-").join(" ")
+                }
+            }
+        });
+        future::join_all(res).await.into_iter().collect::<HashSet<String>>()
     } else {
         eprintln!("Failed to get all moves");
         HashSet::new()
@@ -312,5 +342,17 @@ pub fn get_stat_enum(name: &str) -> Stat {
         "special-defense" => Stat::SpecialDefense,
         "speed" => Stat::Speed,
         _ => Stat::None,
+    }
+}
+
+pub fn get_stat_string(stat: Stat) -> String {
+    match stat {
+        Stat::HP => "hp".to_string(),
+        Stat::Attack => "attack".to_string(),
+        Stat::Defense => "defense".to_string(),
+        Stat::SpecialAttack => "special-attack".to_string(),
+        Stat::SpecialDefense => "special-defense".to_string(),
+        Stat::Speed => "speed".to_string(),
+        Stat::None => "none".to_string(),
     }
 }

@@ -36,7 +36,48 @@ pub async fn process_image(id: usize, image: RgbImage) {
 
                 let result = ocr::ocrs_ocr(&img);
                 match result {
-                    Ok(text) => println!("OCRS result for {}: {}", label, text),
+                    Ok(text) => {
+                        let pokemon_name = text.lines().next().unwrap().trim();
+                        let battle_idx = BATTLES.read().await.last().unwrap().get_team_id(); // TODO: identify battle based on current turn number from end instead of blindly using last
+                        
+                        let (mon, is_new) = {
+                            let current_team = &TEAMS.read().await[battle_idx];
+                            println!("OCRS result for {}: {}", label, pokemon_name);
+
+                            let validated = validate_pokemon(pokemon_name);
+
+                            if validated.is_none() {
+                                return;
+                            }
+
+                            let mon = validated.unwrap();
+                            let exists_in_team = current_team.exists_in_team(&mon);
+
+                            if !exists_in_team && current_team.pokemon.len() >= 6 {
+                                println!("Invalid pokemon name: {}", pokemon_name);
+                                return;
+                            } else if !exists_in_team {
+                                (mon, true)
+                            } else {
+                                (mon, false)
+                            }
+                        };
+
+                        if is_new {
+                            &TEAMS.write().await[battle_idx].add_pokemon(&mon);
+                        }
+
+                        // mon exists for sure in team now
+                        let ollama_res = ocr::ollama_ocr(&img).await;
+                        match ollama_res {
+                            Ok(text) => {
+                                println!("OLLAMA result for {}: {}", label, text);
+                                let updated = &TEAMS.write().await[battle_idx].update_pokemon(&mon, &text);
+                            }
+                            Err(e) => eprintln!("Error OCRing image: {}", e)
+                        }
+                        
+                    },
                     Err(e) => eprintln!("Error OCRing image: {}", e)
                 }
 
@@ -158,13 +199,22 @@ pub async fn process_image(id: usize, image: RgbImage) {
 
                                     let player_team = Team::new(mons);
 
-                                    for (i, team) in TEAMS.read().await.iter().enumerate() {
-                                        if team == &player_team {
-                                            let battle = Battle::new(opponent, i);
-                                            BATTLES.write().await.push(battle);
-                                            IN_BATTLE.set_state(TRUE);
-                                            return;
+                                    let mut found = false;
+                                    {
+                                        let teams = TEAMS.read().await;
+                                        for (i, team) in teams.iter().enumerate() {
+                                            if team == &player_team {
+                                                let battle = Battle::new(opponent, i);
+                                                BATTLES.write().await.push(battle);
+                                                IN_BATTLE.set_state(TRUE);
+                                                found = true;
+                                                break;
+                                            }
                                         }
+                                    }
+
+                                    if found {
+                                        return;
                                     }
 
                                     TEAMS.write().await.push(player_team);

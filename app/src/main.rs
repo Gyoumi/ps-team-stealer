@@ -16,8 +16,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>>{
     dotenv().ok();
     init_pokemon_data().await;
     let url = "https://www.youtube.com/watch?v=5xjQgr8xN9s";
-    let image = ::image::open("./frame_0.png").unwrap().into_rgb8();
-    image_processor::process_image(50, image).await;
+    let image1 = ::image::open("./frame_0.png").unwrap().into_rgb8();
+    let image2 = ::image::open("./frame_50.png").unwrap().into_rgb8();
+    image_processor::process_image(0, image1).await;
+    image_processor::process_image(50, image2).await;
 
     Ok(())
 

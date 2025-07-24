@@ -24,14 +24,15 @@ where
     I: IntoIterator<Item = &'a str>,
     F: Fn(&str) -> bool,
 {
-    let iter = input.trim().to_lowercase().split_whitespace().collect::<Vec<&str>>().join("-");
+    let iter = input.trim().to_lowercase();
 
     if exact_check(&iter) {
         return Some(capitalise_first(&iter));
     }
 
-    let names_vec: Vec<&str> = all_names.into_iter().collect();
-    let best_match = fuzzy_search_best_n(&iter, &names_vec, 1);
+    let names_vec: Vec<String> = all_names.into_iter().map(|s| s.trim().to_lowercase()).collect();
+    let names_vec_refs: Vec<&str> = names_vec.iter().map(|s| s.as_str()).collect();
+    let best_match = fuzzy_search_best_n(&iter, &names_vec_refs, 1);
 
     match best_match.first() {
         Some((name, score)) if *score >= 0.6 => Some(capitalise_first(name)),
@@ -39,7 +40,7 @@ where
     }
 }
 
-fn capitalise_first(s: &str) -> String {
+pub fn capitalise_first(s: &str) -> String {
     let mut result = String::with_capacity(s.len());
     let mut caps_next = true;
     for c in s.chars() {
@@ -58,9 +59,13 @@ fn capitalise_first(s: &str) -> String {
 
 pub fn validate_pokemon(pokemon_name: &str) -> Option<String> {
     let species = POKEMON_SPECIES.get()?;
+    let processed_names: Vec<String> = species
+        .keys()
+        .map(|s| s.as_str().trim().split_whitespace().collect::<Vec<&str>>().join("-"))
+        .collect();
     validate_name(
         pokemon_name,
-        species.keys().map(|s| s.as_str()),
+        processed_names.iter().map(|s| s.as_str()),
         |name| species.contains_key(name),
     )
 }
@@ -83,7 +88,7 @@ pub fn validate_ability(ability_name: &str) -> Option<String> {
     )
 }
 
-pub fn validate_items(item_name: &str) -> Option<String> {
+pub fn validate_item(item_name: &str) -> Option<String> {
     let items = ITEMS.get()?;
     validate_name(
         item_name,
@@ -92,7 +97,7 @@ pub fn validate_items(item_name: &str) -> Option<String> {
     )
 }
 
-pub fn validate_types(type_name: &str) -> Option<String> {
+pub fn validate_type(type_name: &str) -> Option<String> {
     let types = TYPES.get()?;
     validate_name(
         type_name,
