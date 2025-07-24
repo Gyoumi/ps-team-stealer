@@ -150,7 +150,7 @@ async fn process_video(mut video_stream: tokio::process::ChildStdout, frame_size
     };
     let (tx, rx): (Sender<(Arc<Vec<u8>>, usize)>, Receiver<(Arc<Vec<u8>>, usize)>) = flume::unbounded(); 
 
-    // spsc for each worker
+    // mpmc but predefine number of consumers
     for id in 0..worker_count {
         let rx = rx.clone();        
         let frame_size = frame_size.clone();

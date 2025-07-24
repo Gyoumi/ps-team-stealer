@@ -67,7 +67,6 @@ impl Team {
             stat_res = stat_res && setter_res;
         }
 
-        println!("mon ready: {:?}", mon);
         println!("{}", mon.to_import_string());
 
         println!("uploading team");
