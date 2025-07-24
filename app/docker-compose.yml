@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   ollama:
     image: ollama/ollama
@@ -7,6 +5,8 @@ services:
       - "11434:11434"
     volumes:
       - ollama_data:/root/.ollama
+      - ./start-ollama.sh:/start-ollama.sh
+    entrypoint: ["/bin/sh", "/start-ollama.sh"]
 
   app:
     build: .
@@ -14,7 +14,6 @@ services:
       - ollama
     volumes:
       - /root/ps-team-stealer/app:/app
-    # Uncomment and set if your app needs to know the Ollama endpoint
     # environment:
     #   - OLLAMA_URL=http://ollama:11434
 
