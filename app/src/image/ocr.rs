@@ -116,7 +116,10 @@ pub fn ocrs_ocr(img: &RgbImage) -> Result<String, ModelError> {
 pub async fn ollama_ocr(image: &RgbImage) -> Result<String, ModelError> {
     // let ollama = Ollama::default();
     let ollama_host = std::env::var("OLLAMA_HOST").unwrap_or_else(|_| "http://localhost".to_string());
-    let ollama_port = std::env::var("OLLAMA_PORT").unwrap_or_else(|_| "11434".to_string());
+    let ollama_port = std::env::var("OLLAMA_PORT")
+        .ok()
+        .and_then(|s| s.parse::<u16>().ok())
+        .unwrap_or(11434);
     
     let ollama = Ollama::new(ollama_host, ollama_port);
     //println!("Ollama connected");
