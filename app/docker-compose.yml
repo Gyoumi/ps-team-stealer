@@ -13,7 +13,7 @@ services:
     depends_on:
       - ollama
     volumes:
-      - ./src/text/data:/app/src/text/data
+      - /root/ps-team-stealer/app:/app
     # Uncomment and set if your app needs to know the Ollama endpoint
     # environment:
     #   - OLLAMA_URL=http://ollama:11434
