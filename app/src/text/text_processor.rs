@@ -27,15 +27,15 @@ where
     let iter = input.trim().to_lowercase();
 
     if exact_check(&iter) {
-        return Some(capitalise_first(&iter));
+        return Some(iter);
     }
 
-    let names_vec: Vec<String> = all_names.into_iter().map(|s| s.trim().to_lowercase()).collect();
-    let names_vec_refs: Vec<&str> = names_vec.iter().map(|s| s.as_str()).collect();
+    let names_vec: HashMap<String, String> = all_names.into_iter().map(|s| (s.trim().to_lowercase(), s.trim().to_string())).collect();
+    let names_vec_refs: Vec<&str> = names_vec.iter().map(|(k, _)| k.as_str()).collect();
     let best_match = fuzzy_search_best_n(&iter, &names_vec_refs, 1);
 
     match best_match.first() {
-        Some((name, score)) if *score >= 0.6 => Some(capitalise_first(name)),
+        Some((name, score)) if *score >= 0.6 => Some(names_vec.get(*name).unwrap().clone()),
         _ => None,
     }
 }

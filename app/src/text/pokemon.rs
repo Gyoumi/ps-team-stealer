@@ -165,7 +165,7 @@ impl Pokemon {
         };
 
         let raw_stat = self.remove_modifer(raw_value, stat.clone());
-        println!("stat: {:?}, raw_value: {}, raw_stat: {}, base_stat: {}, min_stat: {}, max_stat: {}", stat, raw_value, raw_stat, base_stat, min_stat(base_stat), max_stat(base_stat));
+        //println!("stat: {:?}, raw_value: {}, raw_stat: {}, base_stat: {}, min_stat: {}, max_stat: {}", stat, raw_value, raw_stat, base_stat, min_stat(base_stat), max_stat(base_stat));
         if raw_stat < min_stat(base_stat) || raw_stat > max_stat(base_stat) {
             return false;
         }
@@ -349,7 +349,7 @@ impl Pokemon {
 
         let item_segment = 
         match &self.item {
-            Some(item) => format!(" @ {}", item),
+            Some(item) => format!("@ {}", item),
             None => String::new(),
         };
 
