@@ -1,9 +1,8 @@
-use ort::{environment::Environment, session::{Session, builder::GraphOptimizationLevel, output::SessionOutputs}, value::Value};
-use image::{imageops::{resize, FilterType}, ImageBuffer, Rgb, RgbImage, GenericImageView};
-use ndarray::{Array, IxDyn, CowArray, Ix4, s, Axis, ArrayViewD};
+use ort::session::{Session, builder::GraphOptimizationLevel, output::SessionOutputs};
+use image::{imageops::{resize, FilterType}, Rgb, RgbImage, GenericImageView};
+use ndarray::{Array, Ix4, s, Axis, ArrayViewD};
 use crate::util::error::ModelError;
-use std::{sync::Arc, env, collections::HashMap};
-use imageproc::drawing::draw_text_mut;
+use std::{env, collections::HashMap};
 use once_cell::sync::Lazy;
 
 pub static MODEL_PATH: Lazy<String> = Lazy::new(|| {

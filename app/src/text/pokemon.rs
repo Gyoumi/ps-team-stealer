@@ -111,7 +111,7 @@ impl Pokemon {
         }
 
         if raw_attack > *base_attack {
-            let mut evs: u16 = ((raw_attack - *base_attack) * 4).try_into().unwrap_or(0);
+            let evs: u16 = ((raw_attack - *base_attack) * 4).try_into().unwrap_or(0);
             if evs > u16::min(252, self.remaining_evs) {
                 let evs = ((raw_attack as f32 / 1.1).ceil() as u16 - *base_attack as u16) * 4;
                 self.pos_nature = Some("attack".to_string());
@@ -356,39 +356,4 @@ fn max_stat(stat: &u32) -> u32 {
 
 fn max_hp(hp: &u32) -> u32 {
     *hp + (252 / 4)
-}
-
-fn fetch_natures() -> HashMap<String, HashMap<String, String>> {
-    // TODO: fetch natures from pokemon api
-    HashMap::new()
-}
-
-fn fetch_abilities() -> HashSet<String> {
-    // TODO: fetch abilities from pokemon api
-    HashSet::new()
-}
-
-fn fetch_items() -> HashSet<String> {
-    // TODO: fetch items from pokemon api
-    HashSet::new()
-}
-
-fn fetch_pokemon_names() -> HashSet<String> {
-    // TODO: fetch pokemon names from pokemon api
-    HashSet::new()
-}
-
-fn fetch_moves() -> HashSet<String> {
-    // TODO: fetch moves from pokemon api
-    HashSet::new()
-}
-
-fn fetch_types() -> HashSet<String> {
-    // TODO: fetch types from pokemon api
-    HashSet::new()
-}
-
-fn fetch_POKEMON_SPECIES() -> HashMap<String, PokemonBaseStat> {
-    // TODO: fetch base stats from pokemon api
-    HashMap::new()
 }

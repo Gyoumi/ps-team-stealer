@@ -2,8 +2,6 @@ use once_cell::sync::Lazy;
 use std::sync::{Mutex, Arc};
 use tokio::sync::RwLock;
 use std::collections::HashMap;
-use image::RgbImage;
-use std::io::Cursor;
 use crate::text::{team::Team, battle::Battle};
 
 pub static TEAMS: Lazy<Arc<RwLock<Vec<Team>>>> = Lazy::new(|| Arc::new(RwLock::new(Vec::new())));

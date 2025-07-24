@@ -1,0 +1,83 @@
+[
+  { "name": "hardy", "decreased_stat": "Attack", "increased_stat": "Attack" },
+  { "name": "bold", "decreased_stat": "Attack", "increased_stat": "Defense" },
+  {
+    "name": "modest",
+    "decreased_stat": "Attack",
+    "increased_stat": "SpecialAttack"
+  },
+  {
+    "name": "calm",
+    "decreased_stat": "Attack",
+    "increased_stat": "SpecialDefense"
+  },
+  { "name": "timid", "decreased_stat": "Attack", "increased_stat": "Speed" },
+  { "name": "lonely", "decreased_stat": "Defense", "increased_stat": "Attack" },
+  { "name": "docile", "decreased_stat": "Attack", "increased_stat": "Attack" },
+  {
+    "name": "mild",
+    "decreased_stat": "Defense",
+    "increased_stat": "SpecialAttack"
+  },
+  {
+    "name": "gentle",
+    "decreased_stat": "Defense",
+    "increased_stat": "SpecialDefense"
+  },
+  { "name": "hasty", "decreased_stat": "Defense", "increased_stat": "Speed" },
+  {
+    "name": "adamant",
+    "decreased_stat": "SpecialAttack",
+    "increased_stat": "Attack"
+  },
+  {
+    "name": "impish",
+    "decreased_stat": "SpecialAttack",
+    "increased_stat": "Defense"
+  },
+  { "name": "bashful", "decreased_stat": "Attack", "increased_stat": "Attack" },
+  {
+    "name": "careful",
+    "decreased_stat": "SpecialAttack",
+    "increased_stat": "SpecialDefense"
+  },
+  {
+    "name": "rash",
+    "decreased_stat": "SpecialDefense",
+    "increased_stat": "SpecialAttack"
+  },
+  {
+    "name": "jolly",
+    "decreased_stat": "SpecialAttack",
+    "increased_stat": "Speed"
+  },
+  {
+    "name": "naughty",
+    "decreased_stat": "SpecialDefense",
+    "increased_stat": "Attack"
+  },
+  {
+    "name": "lax",
+    "decreased_stat": "SpecialDefense",
+    "increased_stat": "Defense"
+  },
+  { "name": "quirky", "decreased_stat": "Attack", "increased_stat": "Attack" },
+  {
+    "name": "naive",
+    "decreased_stat": "SpecialDefense",
+    "increased_stat": "Speed"
+  },
+  { "name": "brave", "decreased_stat": "Speed", "increased_stat": "Attack" },
+  { "name": "relaxed", "decreased_stat": "Speed", "increased_stat": "Defense" },
+  {
+    "name": "quiet",
+    "decreased_stat": "Speed",
+    "increased_stat": "SpecialAttack"
+  },
+  {
+    "name": "sassy",
+    "decreased_stat": "Speed",
+    "increased_stat": "SpecialDefense"
+  },
+  { "name": "serious", "decreased_stat": "Attack", "increased_stat": "Attack" }
+]

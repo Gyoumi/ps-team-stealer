@@ -1,6 +1,5 @@
 use std::sync::atomic::{AtomicU8, Ordering};
 use std::sync::Arc;
-use once_cell::sync::Lazy;
 use tokio::sync::Notify;
 
 pub const FALSE: u8 = 0;

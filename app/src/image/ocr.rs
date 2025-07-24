@@ -4,12 +4,11 @@ use ollama_rs::{Ollama, generation::{completion::request::GenerationRequest, ima
 use ocrs::{ImageSource, OcrEngine, OcrEngineParams};
 use rten::Model;
 use std::path::PathBuf;
-use ort::session::{Session, builder::GraphOptimizationLevel};
 #[allow(unused)]
 
 use crate::util::error::ModelError;
 use std::error::Error;
-use image::{RgbImage, ImageEncoder, DynamicImage, GenericImageView, RgbaImage};
+use image::{RgbImage, GenericImageView};
 use itertools::Itertools;
 use paddle_ocr_rs::ocr_lite::OcrLite;
 

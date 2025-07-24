@@ -2,14 +2,12 @@ use image::{RgbImage};
 use itertools::Itertools;
 use super::image_segmenter;
 use super::ocr;
-use std::time::Instant;
 use once_cell::sync::Lazy;
 use crate::text::battle::Battle;
 use crate::text::text_processor::BATTLES;
 use crate::text::{pokemon::Pokemon, team::Team, text_processor::TEAMS};
 use crate::util::load_flag::{AsyncLoadFlag, FALSE, LOADING, TRUE};
-use rust_fuzzy_search::{fuzzy_search, fuzzy_search_best_n, fuzzy_compare, fuzzy_search_threshold};
-use ordered_float::OrderedFloat;
+use rust_fuzzy_search::{fuzzy_search_best_n, fuzzy_compare};
 
 pub static IN_BATTLE: Lazy<AsyncLoadFlag> = Lazy::new(|| AsyncLoadFlag::new());
 
